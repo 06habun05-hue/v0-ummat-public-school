@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+export type UserRole = 'SUPER_ADMIN' | 'BRANCH_ADMIN' | 'ACCOUNTANT' | 'TEACHER'
+
 interface UIStore {
   selectedBranch: string
   setSelectedBranch: (branch: string) => void
@@ -7,6 +9,8 @@ interface UIStore {
   setSidebarCollapsed: (v: boolean) => void
   isDarkMode: boolean
   toggleDarkMode: () => void
+  role: UserRole
+  setRole: (role: UserRole) => void
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -16,4 +20,6 @@ export const useUIStore = create<UIStore>((set) => ({
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
   isDarkMode: false,
   toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
+  role: 'SUPER_ADMIN',
+  setRole: (role) => set({ role }),
 }))

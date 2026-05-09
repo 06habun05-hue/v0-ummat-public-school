@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Bell, Settings, LogOut, ChevronDown, Search, Sun, Moon, X } from 'lucide-react'
+import { Bell, Settings, LogOut, ChevronDown, Search, Sun, Moon, X, ShieldCheck } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/lib/store/ui-store'
@@ -44,11 +44,13 @@ export function TopNav() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [roleOpen, setRoleOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
-  const { selectedBranch, setSelectedBranch, isDarkMode, toggleDarkMode } = useUIStore()
+  const { selectedBranch, setSelectedBranch, isDarkMode, toggleDarkMode, role, setRole } = useUIStore()
   const branches = ['All Branches', 'Main Campus', 'North Campus', 'South Campus']
+  const roles: UserRole[] = ['SUPER_ADMIN', 'BRANCH_ADMIN', 'ACCOUNTANT', 'TEACHER']
   const [branchOpen, setBranchOpen] = useState(false)
 
   const pageTitle = Object.entries(pathLabels).find(([key]) =>
@@ -87,33 +89,33 @@ export function TopNav() {
       {searchOpen && (
         <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 px-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setSearchOpen(false); setSearchQuery('') }} />
-          <div className="relative w-full max-w-lg bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-              <Search size={16} className="text-muted-foreground" />
+          <div className="relative w-full max-w-lg bg-background border border-border rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+              <Search size={18} className="text-muted-foreground" />
               <input
                 ref={searchRef}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search modules, students..."
-                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground font-medium"
               />
-              <button onClick={() => { setSearchOpen(false); setSearchQuery('') }}>
+              <button onClick={() => { setSearchOpen(false); setSearchQuery('') }} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
                 <X size={16} className="text-muted-foreground" />
               </button>
             </div>
-            <div className="py-2 max-h-72 overflow-y-auto">
+            <div className="py-2 max-h-80 overflow-y-auto">
               {filteredLinks.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-muted-foreground">No results found</p>
+                <p className="px-6 py-4 text-sm text-muted-foreground font-medium text-center">No results found</p>
               ) : (
                 filteredLinks.map(link => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => { setSearchOpen(false); setSearchQuery('') }}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors text-sm text-foreground"
+                    className="flex items-center gap-4 px-6 py-3.5 hover:bg-muted transition-colors text-sm text-foreground group"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                    {link.label}
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors flex-shrink-0" />
+                    <span className="font-semibold">{link.label}</span>
                   </Link>
                 ))
               )}
@@ -122,46 +124,77 @@ export function TopNav() {
         </div>
       )}
 
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="flex items-center justify-between px-5 py-3">
+      <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
+        <div className="flex items-center justify-between px-6 py-3.5">
           {/* Left: Breadcrumb */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground hidden sm:block">Home</span>
-            <span className="text-muted-foreground text-xs hidden sm:block">/</span>
-            <h1 className="text-sm font-heading font-semibold text-foreground">{pageTitle}</h1>
+            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 hidden sm:block">Portal</span>
+            <span className="text-muted-foreground/30 text-[10px] hidden sm:block">/</span>
+            <h1 className="text-sm font-heading font-black text-foreground tracking-tight">{pageTitle}</h1>
           </div>
 
           {/* Right */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-3">
             {/* Search */}
             <button
               onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 50) }}
-              className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground text-xs border border-border hidden sm:flex"
+              className="flex items-center gap-3 px-4 py-2 hover:bg-muted rounded-xl transition-all text-muted-foreground text-xs border border-border hidden lg:flex bg-muted/30"
             >
               <Search size={14} />
-              <span>Search</span>
-              <kbd className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
+              <span className="font-semibold">Quick Search</span>
+              <kbd className="text-[10px] bg-background border border-border px-1.5 py-0.5 rounded-md font-mono font-bold shadow-sm">⌘K</kbd>
             </button>
+
+            {/* Role Switcher (Preview Only) */}
+            <div className="relative">
+              <button
+                onClick={() => setRoleOpen(!roleOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-xl hover:bg-accent/20 transition-all text-[11px] font-black text-accent uppercase tracking-wider"
+              >
+                <ShieldCheck size={13} />
+                {role.replace('_', ' ')}
+                <ChevronDown size={13} />
+              </button>
+              {roleOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 overflow-hidden animate-slide-in">
+                  <p className="px-4 py-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">Switch Identity</p>
+                  {roles.map(r => (
+                    <button
+                      key={r}
+                      onClick={() => { setRole(r); setRoleOpen(false) }}
+                      className={cn(
+                        'block w-full text-left px-4 py-2.5 text-xs font-bold transition-all',
+                        role === r ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {r.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="w-px h-4 bg-border mx-1" />
 
             {/* Branch Selector */}
             <div className="relative">
               <button
                 onClick={() => setBranchOpen(!branchOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg hover:bg-muted transition-colors text-xs font-medium"
+                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-xl hover:bg-muted transition-all text-xs font-bold"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,122,48,0.5)]" />
                 {selectedBranch}
-                <ChevronDown size={13} />
+                <ChevronDown size={13} className="text-muted-foreground" />
               </button>
               {branchOpen && (
-                <div className="absolute right-0 mt-1.5 w-44 bg-background border border-border rounded-lg shadow-lg z-50 py-1">
+                <div className="absolute right-0 mt-2 w-52 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 animate-slide-in">
                   {branches.map(branch => (
                     <button
                       key={branch}
                       onClick={() => { setSelectedBranch(branch); setBranchOpen(false) }}
                       className={cn(
-                        'block w-full text-left px-3 py-2 text-xs transition-colors',
-                        selectedBranch === branch ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted'
+                        'block w-full text-left px-4 py-2.5 text-xs font-bold transition-all',
+                        selectedBranch === branch ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
                       )}
                     >
                       {branch}
@@ -171,65 +204,71 @@ export function TopNav() {
               )}
             </div>
 
-            {/* Dark mode toggle */}
-            <button
-              onClick={toggleDarkMode}
-              className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground"
-              title="Toggle dark mode"
-            >
-              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-
-            {/* Notifications */}
-            <div className="relative">
+            {/* Icons Group */}
+            <div className="flex items-center gap-1">
               <button
-                onClick={() => setNotifOpen(!notifOpen)}
-                className="relative p-1.5 hover:bg-muted rounded-lg transition-colors"
+                onClick={toggleDarkMode}
+                className="p-2 hover:bg-muted rounded-xl transition-all text-muted-foreground hover:text-foreground"
+                title="Toggle dark mode"
               >
-                <Bell size={17} className="text-foreground" />
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-accent rounded-full" />
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              {notifOpen && (
-                <div className="absolute right-0 mt-1.5 w-72 bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-                    <h3 className="font-semibold text-xs">Notifications</h3>
-                    <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-full font-semibold">{notifications.length}</span>
+
+              {/* Notifications */}
+              <div className="relative">
+                <button
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="relative p-2 hover:bg-muted rounded-xl transition-all group"
+                >
+                  <Bell size={19} className="text-foreground transition-transform group-hover:rotate-12" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-background animate-pulse" />
+                </button>
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-background border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-slide-in">
+                    <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-muted/20">
+                      <h3 className="font-black text-xs uppercase tracking-widest">Inbox</h3>
+                      <span className="text-[10px] bg-accent text-white px-2 py-0.5 rounded-full font-black shadow-sm">{notifications.length}</span>
+                    </div>
+                    <div className="divide-y divide-border">
+                      {notifications.map((n, i) => (
+                        <div key={i} className="px-5 py-4 hover:bg-muted transition-all cursor-pointer group">
+                          <p className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{n.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{n.desc}</p>
+                          <p className="text-[10px] font-black uppercase text-muted-foreground/40 mt-2 tracking-tighter">{n.time}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="divide-y divide-border">
-                    {notifications.map((n, i) => (
-                      <div key={i} className="px-4 py-3 hover:bg-muted transition-colors cursor-pointer">
-                        <p className="font-semibold text-xs text-foreground">{n.title}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{n.desc}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">{n.time}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Profile */}
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-lg transition-colors"
+                className="flex items-center gap-2.5 pl-2 pr-1.5 py-1.5 hover:bg-muted rounded-xl transition-all border border-transparent hover:border-border"
               >
-                <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xs">
+                <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center text-white font-black text-xs shadow-inner">
                   JD
+                </div>
+                <div className="hidden sm:flex flex-col items-start mr-1">
+                  <span className="text-[10px] font-black text-foreground leading-none">John Doe</span>
+                  <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-tighter mt-0.5">{role.split('_')[0]}</span>
                 </div>
                 <ChevronDown size={13} className="text-muted-foreground" />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 mt-1.5 w-44 bg-background border border-border rounded-lg shadow-lg z-50 py-1">
-                  <div className="px-3 py-2 border-b border-border mb-1">
-                    <p className="text-xs font-semibold text-foreground">John Doe</p>
-                    <p className="text-[10px] text-muted-foreground">Branch Admin</p>
+                <div className="absolute right-0 mt-2 w-52 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 animate-slide-in">
+                  <div className="px-4 py-3 border-b border-border mb-1">
+                    <p className="text-[11px] font-black text-foreground">Account Info</p>
+                    <p className="text-[10px] text-muted-foreground font-medium truncate">john.doe@ummat.edu</p>
                   </div>
-                  <Link href="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors">
-                    <Settings size={13} /> Settings
+                  <Link href="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                    <Settings size={15} /> My Settings
                   </Link>
-                  <button className="flex items-center gap-2 w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors text-danger">
-                    <LogOut size={13} /> Logout
+                  <button className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-accent hover:bg-accent/5 transition-all">
+                    <LogOut size={15} /> Sign Out
                   </button>
                 </div>
               )}

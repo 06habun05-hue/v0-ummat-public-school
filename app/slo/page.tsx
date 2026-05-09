@@ -3,6 +3,13 @@
 import { useState } from 'react'
 import { Search, Plus, CheckSquare, Square, BookOpen, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const mockSLOs = [
   { id: 'SLO-001', description: 'Students can identify main ideas in a passage', subject: 'English', chapter: 'Chapter 1', ncp: 'NCP-LIT-01', status: 'Active' },
@@ -42,12 +49,12 @@ export default function SLOPage() {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">SLO & Curriculum Mapping</h2>
+          <h2 className="text-2xl font-heading font-black text-foreground tracking-tight">SLO & Curriculum Mapping</h2>
           <p className="text-sm text-muted-foreground mt-1">Manage learning outcomes and curriculum alignment</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary/90 transition-colors">
+        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
           <Plus size={15} /> Add SLO
         </button>
       </div>
@@ -55,7 +62,7 @@ export default function SLOPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {[['registry', 'SLO Registry'], ['map', 'Curriculum Map']].map(([key, label]) => (
-          <button key={key} onClick={() => setActiveTab(key as 'registry' | 'map')} className={cn('px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px', activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
+          <button key={key} onClick={() => setActiveTab(key as 'registry' | 'map')} className={cn('px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 -mb-px', activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
             {label}
           </button>
         ))}
@@ -63,18 +70,35 @@ export default function SLOPage() {
 
       {activeTab === 'registry' && (
         <>
-          <div className="bg-background border border-border rounded-lg p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-background/50 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search SLO..." className="w-full pl-8 pr-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search SLO..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                />
               </div>
-              <select value={subjectFilter} onChange={e => setSubjectFilter(e.target.value)} className="px-3 py-2 border border-border rounded-md bg-background text-sm">
-                {subjects.map(s => <option key={s}>{s === 'All' ? 'All Subjects' : s}</option>)}
-              </select>
-              <select value={chapterFilter} onChange={e => setChapterFilter(e.target.value)} className="px-3 py-2 border border-border rounded-md bg-background text-sm">
-                {chapters.map(c => <option key={c}>{c === 'All' ? 'All Chapters' : c}</option>)}
-              </select>
+
+              <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter Subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map(s => <SelectItem key={s} value={s}>{s === 'All' ? 'All Subjects' : s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <Select value={chapterFilter} onValueChange={setChapterFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter Chapter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chapters.map(c => <SelectItem key={c} value={c}>{c === 'All' ? 'All Chapters' : c}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

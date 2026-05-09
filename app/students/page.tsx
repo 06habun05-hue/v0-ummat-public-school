@@ -4,6 +4,13 @@ import { useState } from 'react'
 import { Search, Filter, ChevronUp, ChevronDown, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const mockStudents = [
   { id: 'STU001', name: 'Ahmed Hassan', class: '10-A', branch: 'Main Campus', attendance: 95, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
@@ -68,34 +75,49 @@ export default function StudentsPage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Students</h2>
-        <p className="text-sm text-muted-foreground mt-1">{filtered.length} students found</p>
+        <h2 className="text-2xl font-heading font-bold text-foreground tracking-tight">Students</h2>
+        <p className="text-sm text-muted-foreground mt-1">{filtered.length} students enrolled across all branches</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-background border border-border rounded-lg p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="bg-background/50 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
               placeholder="Search by name or ID..."
-              className="w-full pl-9 pr-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
             />
           </div>
-          {([['Branch', branches, branchFilter, (v: string) => { setBranchFilter(v); setPage(1) }],
-             ['Class', classes, classFilter, (v: string) => { setClassFilter(v); setPage(1) }],
-             ['Fee Status', feeStatuses, feeFilter, (v: string) => { setFeeFilter(v); setPage(1) }]] as const).map(([label, opts, val, setter]) => (
-            <select
-              key={label}
-              value={val}
-              onChange={e => setter(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {opts.map(o => <option key={o} value={o}>{label}: {o}</option>)}
-            </select>
-          ))}
+
+          <Select value={branchFilter} onValueChange={v => { setBranchFilter(v); setPage(1) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter Branch" />
+            </SelectTrigger>
+            <SelectContent>
+              {branches.map(o => <SelectItem key={o} value={o}>{o === 'All' ? 'All Branches' : o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={classFilter} onValueChange={v => { setClassFilter(v); setPage(1) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter Class" />
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map(o => <SelectItem key={o} value={o}>{o === 'All' ? 'All Classes' : o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={feeFilter} onValueChange={v => { setFeeFilter(v); setPage(1) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Fee Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {feeStatuses.map(o => <SelectItem key={o} value={o}>{o === 'All' ? 'All Fee Statuses' : o}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

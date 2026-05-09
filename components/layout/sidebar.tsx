@@ -19,16 +19,15 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useUIStore, UserRole } from '@/lib/store/ui-store'
 import { useApprovalStore } from '@/lib/store/approval-store'
 
-const navGroups = [
-  {
+const ALL_NAV_GROUPS = {
+  CORE: {
     label: 'Core',
-    items: [
-      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    ],
+    items: [{ label: 'Dashboard', href: '/', icon: LayoutDashboard }],
   },
-  {
+  ACADEMIC: {
     label: 'Academic',
     items: [
       { label: 'Assessment', href: '/assessment', icon: ClipboardList },
@@ -38,7 +37,7 @@ const navGroups = [
       { label: 'Approvals', href: '/approvals', icon: CheckCircle, badge: true },
     ],
   },
-  {
+  ADMINISTRATION: {
     label: 'Administration',
     items: [
       { label: 'Fee Management', href: '/fees', icon: CreditCard },
@@ -46,54 +45,66 @@ const navGroups = [
       { label: 'Audit Logs', href: '/audit', icon: ScrollText },
     ],
   },
-  {
+  SYSTEM: {
     label: 'System',
-    items: [
-      { label: 'Admin & Settings', href: '/admin', icon: Settings },
-    ],
+    items: [{ label: 'Admin & Settings', href: '/admin', icon: Settings }],
   },
-]
+}
+
+const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  SUPER_ADMIN: ['CORE', 'ACADEMIC', 'ADMINISTRATION', 'SYSTEM'],
+  BRANCH_ADMIN: ['CORE', 'ACADEMIC', 'ADMINISTRATION', 'SYSTEM'],
+  ACCOUNTANT: ['CORE', 'ADMINISTRATION'],
+  TEACHER: ['CORE', 'ACADEMIC'],
+}
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
+  const { role } = useUIStore()
   const pendingCount = useApprovalStore((s) => s.pending.length)
+
+  const allowedGroups = ROLE_PERMISSIONS[role]
+  const navGroups = allowedGroups.map(key => ALL_NAV_GROUPS[key as keyof typeof ALL_NAV_GROUPS])
 
   return (
     <aside
       className={cn(
-        'flex flex-col bg-secondary text-secondary-foreground border-r border-secondary/20 transition-all duration-300 flex-shrink-0',
-        collapsed ? 'w-16' : 'w-60'
+        'flex flex-col bg-secondary text-secondary-foreground border-r border-white/5 transition-all duration-300 flex-shrink-0',
+        collapsed ? 'w-16' : 'w-64'
       )}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+      <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <ShieldCheck size={15} className="text-white" />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/10">
+              <ShieldCheck size={18} className="text-white" />
             </div>
-            <span className="font-heading font-bold text-base text-white">Ummat</span>
+            <div className="flex flex-col">
+              <span className="font-heading font-black text-sm text-white leading-none">Ummat</span>
+              <span className="text-[9px] font-bold text-white/50 uppercase tracking-tighter mt-1">Systems</span>
+            </div>
           </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 hover:bg-white/10 rounded-md transition-colors ml-auto"
+          className="p-1.5 hover:bg-white/5 rounded-md transition-colors ml-auto text-white/70 hover:text-white"
           aria-label="Toggle sidebar"
         >
           <ChevronLeft
             size={16}
-            className={cn('transition-transform text-white/70', collapsed ? 'rotate-180' : '')}
+            className={cn('transition-transform', collapsed ? 'rotate-180' : '')}
           />
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 py-4 space-y-5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto scrollbar-hide">
         {navGroups.map((group) => (
-          <div key={group.label}>
+          <div key={group.label} className="space-y-1.5">
             {!collapsed && (
-              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+              <p className="px-3 mb-2 text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
                 {group.label}
               </p>
             )}
@@ -107,21 +118,24 @@ export function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-md transition-all text-sm',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm group relative',
                       isActive
-                        ? 'bg-primary text-white font-semibold'
-                        : 'text-white/60 hover:text-white hover:bg-white/8'
+                        ? 'bg-white/10 text-white font-bold shadow-sm'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
                     )}
                     title={collapsed ? item.label : undefined}
                   >
-                    <Icon size={17} className="flex-shrink-0" />
+                    <Icon size={18} className={cn('flex-shrink-0 transition-transform group-hover:scale-110', isActive ? 'text-white' : 'text-white/50 group-hover:text-white')} />
                     {!collapsed && (
-                      <span className="flex-1 leading-none">{item.label}</span>
+                      <span className="flex-1 leading-none tracking-tight">{item.label}</span>
                     )}
                     {!collapsed && showBadge && (
-                      <span className="bg-warning text-warning-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                      <span className="bg-accent text-white text-[10px] font-black px-2 py-0.5 rounded-full leading-none shadow-lg">
                         {pendingCount}
                       </span>
+                    )}
+                    {isActive && (
+                      <div className="absolute left-0 w-1 h-4 bg-white rounded-r-full" />
                     )}
                   </Link>
                 )
@@ -131,14 +145,27 @@ export function Sidebar() {
         ))}
       </nav>
 
+      {/* Profile/Role Status */}
+      {!collapsed && (
+        <div className="px-3 py-4">
+          <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+             <p className="text-[9px] font-black uppercase text-white/40 tracking-widest mb-1">Access Level</p>
+             <p className="text-xs font-bold text-white flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+               {role.replace('_', ' ')}
+             </p>
+          </div>
+        </div>
+      )}
+
       {/* Logout */}
-      <div className="border-t border-white/10 p-2">
+      <div className="border-t border-white/5 p-3">
         <button
-          className="flex items-center gap-3 px-3 py-2 rounded-md w-full transition-colors text-white/50 hover:text-white hover:bg-white/8 text-sm"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full transition-all text-white/50 hover:text-white hover:bg-white/5 text-sm font-medium"
           title={collapsed ? 'Logout' : undefined}
         >
-          <LogOut size={17} className="flex-shrink-0" />
-          {!collapsed && <span>Logout</span>}
+          <LogOut size={18} className="flex-shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
         </button>
       </div>
     </aside>

@@ -3,6 +3,13 @@
 import { useState } from 'react'
 import { Search, Filter, Clock, User, Settings, DollarSign, FileText, LogIn, LogOut, Trash2, Edit } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const actionIcons: Record<string, React.ElementType> = {
   'Assessment Edit': Edit,
@@ -66,28 +73,55 @@ export default function AuditPage() {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">Audit Logs</h2>
+          <h2 className="text-2xl font-heading font-black text-foreground tracking-tight">Audit Logs</h2>
           <p className="text-sm text-muted-foreground mt-1">Complete activity trail across all system modules</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-md text-sm font-medium hover:bg-muted transition-colors">
+        <button className="flex items-center gap-2 px-6 py-2.5 bg-background border border-border rounded-xl text-xs font-black uppercase tracking-widest hover:bg-muted transition-all shadow-sm">
           <FileText size={14} /> Export CSV
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-background border border-border rounded-lg p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="bg-background/50 backdrop-blur-sm border border-border rounded-2xl p-5 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder="Search user or action..." className="w-full pl-8 pr-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+              placeholder="Search user or action..."
+              className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+            />
           </div>
-          {([['Module', modules, moduleFilter, setModuleFilter], ['Action', actions, actionFilter, setActionFilter], ['Role', roles, roleFilter, setRoleFilter]] as const).map(([label, opts, val, setter]) => (
-            <select key={label} value={val} onChange={e => { setter(e.target.value); setPage(1) }} className="px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none">
-              {opts.map(o => <option key={o} value={o}>{label}: {o}</option>)}
-            </select>
-          ))}
+
+          <Select value={moduleFilter} onValueChange={v => { setModuleFilter(v); setPage(1) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Module" />
+            </SelectTrigger>
+            <SelectContent>
+              {modules.map(o => <SelectItem key={o} value={o}>{o === 'All' ? 'All Modules' : o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={actionFilter} onValueChange={v => { setActionFilter(v); setPage(1) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="Action" />
+            </SelectTrigger>
+            <SelectContent>
+              {actions.map(o => <SelectItem key={o} value={o}>{o === 'All' ? 'All Actions' : o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={roleFilter} onValueChange={v => { setRoleFilter(v); setPage(1) }}>
+            <SelectTrigger>
+              <SelectValue placeholder="User Role" />
+            </SelectTrigger>
+            <SelectContent>
+              {roles.map(o => <SelectItem key={o} value={o}>{o === 'All' ? 'All Roles' : o}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
