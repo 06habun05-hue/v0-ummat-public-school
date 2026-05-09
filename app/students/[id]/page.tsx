@@ -1,24 +1,9 @@
 'use client'
 
-import { use } from 'react'
-import { Mail, Phone, MapPin, BookOpen, DollarSign, BarChart3, TrendingUp, AlertCircle } from 'lucide-react'
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
+import { use, useState, useMemo } from 'react'
+import { Mail, Phone, MapPin, BookOpen, DollarSign, BarChart3, TrendingUp, AlertCircle, Calendar, GraduationCap, Award, ShieldCheck, ChevronRight } from 'lucide-react'
+import ReactECharts from 'echarts-for-react'
+import { cn } from '@/lib/utils'
 
 // Mock student data
 const studentData = {
@@ -30,45 +15,47 @@ const studentData = {
   email: 'ahmed.hassan@school.edu',
   phone: '+966-55-1234567',
   address: 'Riyadh, Saudi Arabia',
+  gender: 'Male',
+  dob: '2009-05-15',
+  admissionDate: '2020-08-20',
   
-  // Academic Performance
   academicOverview: [
-    { category: 'Listening', value: 85 },
-    { category: 'Reading', value: 90 },
-    { category: 'Speaking', value: 80 },
-    { category: 'Understanding', value: 88 },
-    { category: 'Behavior', value: 92 },
+    { name: 'Listening', value: 85 },
+    { name: 'Reading', value: 90 },
+    { name: 'Speaking', value: 80 },
+    { name: 'Understanding', value: 88 },
+    { name: 'Behavior', value: 92 },
   ],
   
-  performanceTrend: [
-    { term: 'Term 1', gpa: 3.6 },
-    { term: 'Term 2', gpa: 3.7 },
-    { term: 'Term 3', gpa: 3.8 },
-  ],
+  performanceTrend: {
+    terms: ['Term 1', 'Term 2', 'Term 3'],
+    gpas: [3.6, 3.7, 3.8]
+  },
   
   sloProgress: [
-    { name: 'SLO-001', mastery: 85 },
-    { name: 'SLO-002', mastery: 78 },
-    { name: 'SLO-003', mastery: 92 },
-    { name: 'SLO-004', mastery: 88 },
+    { name: 'SLO-001: Main Idea', mastery: 85, ncp: 'NCP-LIT-01', status: 'Mastered' },
+    { name: 'SLO-002: Math Logic', mastery: 78, ncp: 'NCP-MATH-02', status: 'Proficient' },
+    { name: 'SLO-003: Cell Biology', mastery: 92, ncp: 'NCP-SCI-01', status: 'Mastered' },
+    { name: 'SLO-004: Islamic Ethics', mastery: 88, ncp: 'NCP-ISL-01', status: 'Mastered' },
   ],
   
-  behavioral: {
-    presentRate: 95,
-    uniformRate: 98,
-    interactionScore: 85,
+  behavioralTrend: {
+    weeks: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'],
+    scores: [85, 88, 84, 90, 92, 91]
   },
   
   fees: {
+    total: 45000,
+    paid: 45000,
     outstanding: 0,
     lastPayment: '2025-05-01',
     status: 'Paid',
   },
   
   recentAssessments: [
-    { date: '2025-05-05', subject: 'English', score: 92 },
-    { date: '2025-05-03', subject: 'Mathematics', score: 88 },
-    { date: '2025-05-01', subject: 'Science', score: 85 },
+    { date: '2025-05-05', subject: 'English', score: 92, status: 'Excellence' },
+    { date: '2025-05-03', subject: 'Mathematics', score: 88, status: 'Great' },
+    { date: '2025-05-01', subject: 'Science', score: 85, status: 'Great' },
   ],
 }
 
@@ -78,212 +65,243 @@ interface PageProps {
 
 export default function StudentProfilePage({ params }: PageProps) {
   const { id } = use(params)
+  const [activeTab, setActiveTab] = useState<'overview' | 'academic' | 'history'>('overview')
+
+  // ECharts Options
+  const radarOption = {
+    radar: {
+      indicator: studentData.academicOverview.map(item => ({ name: item.name, max: 100 })),
+      shape: 'polygon',
+      splitNumber: 4,
+      axisName: { color: '#64748b', fontSize: 10 },
+      splitLine: { lineStyle: { color: ['#e2e8f0'] } },
+      splitArea: { show: false }
+    },
+    series: [{
+      type: 'radar',
+      data: [{
+        value: studentData.academicOverview.map(item => item.value),
+        name: 'Skill Level',
+        itemStyle: { color: '#2A7A30' },
+        areaStyle: { color: '#2A7A3033' }
+      }]
+    }]
+  }
+
+  const performanceOption = {
+    tooltip: { trigger: 'axis' },
+    grid: { top: 10, bottom: 30, left: 30, right: 10 },
+    xAxis: { type: 'category', data: studentData.performanceTrend.terms, axisTick: { show: false }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+    yAxis: { type: 'value', min: 0, max: 4, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [{
+      data: studentData.performanceTrend.gpas,
+      type: 'line',
+      smooth: true,
+      symbolSize: 8,
+      itemStyle: { color: '#2A7A30' },
+      lineStyle: { width: 3 },
+      areaStyle: { color: 'rgba(42, 122, 48, 0.1)' }
+    }]
+  }
+
+  const behavioralOption = {
+    tooltip: { trigger: 'axis' },
+    grid: { top: 10, bottom: 30, left: 30, right: 10 },
+    xAxis: { type: 'category', data: studentData.behavioralTrend.weeks, axisTick: { show: false }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+    yAxis: { type: 'value', min: 60, max: 100, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [{
+      data: studentData.behavioralTrend.scores,
+      type: 'bar',
+      itemStyle: { 
+        color: '#2A7A30',
+        borderRadius: [4, 4, 0, 0]
+      },
+      barMaxWidth: 20
+    }]
+  }
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">
-            Student Profile
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            360-degree view of academic performance and engagement
-          </p>
+    <div className="p-6 md:p-8 space-y-8 bg-neutral/30 min-h-screen">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-primary/20">
+             {studentData.avatar}
+           </div>
+           <div>
+             <h2 className="text-2xl font-black text-foreground tracking-tight">{studentData.name}</h2>
+             <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+               <span>ID: {studentData.id}</span>
+               <span>•</span>
+               <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest">{studentData.class}</span>
+             </div>
+           </div>
+        </div>
+        <div className="flex gap-2 w-full md:w-auto">
+          <button className="flex-1 md:flex-none px-4 py-2 border border-border bg-background rounded-lg text-sm font-bold hover:bg-muted transition-all">Edit Profile</button>
+          <button className="flex-1 md:flex-none px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">Print Report</button>
         </div>
       </div>
 
-      {/* Profile Grid - Bento Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
-        {/* Profile Card - spans 1 column */}
-        <div className="bg-background border border-border rounded-lg p-6 lg:row-span-2">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white font-heading font-bold text-2xl mb-4">
-              {studentData.avatar}
-            </div>
-            <h3 className="text-xl font-heading font-bold text-foreground mb-1">
-              {studentData.name}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">ID: {studentData.id}</p>
-            
-            <div className="w-full space-y-3 text-left mt-4 pt-4 border-t border-border">
-              <div className="flex items-start gap-3">
-                <BookOpen size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Class</p>
-                  <p className="font-medium text-sm">{studentData.class}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <MapPin size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Branch</p>
-                  <p className="font-medium text-sm">{studentData.branch}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Mail size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="font-medium text-sm text-primary break-all">{studentData.email}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Phone size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Phone</p>
-                  <p className="font-medium text-sm">{studentData.phone}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex bg-background p-1 rounded-xl w-fit border border-border shadow-sm">
+        {([['overview', '360 Overview'], ['academic', 'Academic Mastery'], ['history', 'Historical Archive']] as const).map(([tab, label]) => (
+          <button 
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              'px-6 py-2 text-xs font-bold rounded-lg transition-all',
+              activeTab === tab ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-        {/* Academic Overview - Radar Chart */}
-        <div className="bg-background border border-border rounded-lg p-6 sm:col-span-1 lg:col-span-1">
-          <h4 className="font-heading font-semibold text-foreground mb-4">Academic Overview</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <RadarChart data={studentData.academicOverview}>
-              <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} />
-              <PolarRadiusAxis angle={90} domain={[0, 100]} />
-              <Radar
-                name="Score"
-                dataKey="value"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary))"
-                fillOpacity={0.5}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Performance Trend - Line Chart */}
-        <div className="bg-background border border-border rounded-lg p-6 sm:col-span-1 lg:col-span-1">
-          <h4 className="font-heading font-semibold text-foreground mb-4">Performance Trend</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={studentData.performanceTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="term" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 4]} tick={{ fontSize: 11 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="gpa"
-                stroke="hsl(var(--success))"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* SLO Progress - Horizontal Bars */}
-        <div className="bg-background border border-border rounded-lg p-6 sm:col-span-2 lg:col-span-1">
-          <h4 className="font-heading font-semibold text-foreground mb-4">SLO Progress</h4>
-          <div className="space-y-4">
-            {studentData.sloProgress.map((slo) => (
-              <div key={slo.name}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">{slo.name}</span>
-                  <span className="text-xs text-muted-foreground">{slo.mastery}%</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${slo.mastery}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Behavioral Summary */}
-        <div className="bg-background border border-border rounded-lg p-6 sm:col-span-2 lg:col-span-1">
-          <h4 className="font-heading font-semibold text-foreground mb-4">Behavioral Summary</h4>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-success/10 border border-success/20 rounded-lg">
-              <span className="text-sm font-medium">Present Rate</span>
-              <span className="text-lg font-bold text-success">{studentData.behavioral.presentRate}%</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/20 rounded-lg">
-              <span className="text-sm font-medium">Uniform Rate</span>
-              <span className="text-lg font-bold text-primary">{studentData.behavioral.uniformRate}%</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-warning/10 border border-warning/20 rounded-lg">
-              <span className="text-sm font-medium">Interaction Score</span>
-              <span className="text-lg font-bold text-warning">{studentData.behavioral.interactionScore}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Fee Status */}
-        <div className="bg-background border border-border rounded-lg p-6 sm:col-span-2 lg:col-span-1">
-          <h4 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
-            <DollarSign size={18} />
-            Fee Status
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Outstanding Balance</span>
-              <span className={`font-bold text-lg ${studentData.fees.outstanding > 0 ? 'text-danger' : 'text-success'}`}>
-                ${studentData.fees.outstanding}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Last Payment</span>
-              <span className="font-medium text-sm">{new Date(studentData.fees.lastPayment).toLocaleDateString()}</span>
-            </div>
-            <div className="pt-3 border-t border-border">
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                studentData.fees.status === 'Paid'
-                  ? 'bg-success/10 text-success'
-                  : 'bg-warning/10 text-warning'
-              }`}>
-                {studentData.fees.status}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Assessments */}
-        <div className="bg-background border border-border rounded-lg p-6 sm:col-span-2 lg:col-span-2">
-          <h4 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
-            <BarChart3 size={18} />
-            Recent Assessments
-          </h4>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Date</th>
-                  <th className="text-left py-2 px-3 font-semibold text-muted-foreground">Subject</th>
-                  <th className="text-right py-2 px-3 font-semibold text-muted-foreground">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {studentData.recentAssessments.map((assessment, idx) => (
-                  <tr key={idx} className={idx % 2 === 1 ? 'bg-muted/30' : ''}>
-                    <td className="py-3 px-3">{new Date(assessment.date).toLocaleDateString()}</td>
-                    <td className="py-3 px-3 font-medium">{assessment.subject}</td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="inline-block px-2 py-1 bg-primary/10 text-primary rounded font-semibold">
-                        {assessment.score}%
-                      </span>
-                    </td>
-                  </tr>
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column - Details */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-background border border-border rounded-2xl p-6 shadow-sm">
+              <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Contact & Information</h4>
+              <div className="space-y-4">
+                {[
+                  { icon: Mail, label: 'Email Address', value: studentData.email },
+                  { icon: Phone, label: 'Phone Number', value: studentData.phone },
+                  { icon: MapPin, label: 'Address', value: studentData.address },
+                  { icon: Calendar, label: 'Date of Birth', value: studentData.dob },
+                  { icon: GraduationCap, label: 'Admission Date', value: studentData.admissionDate },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground flex-shrink-0"><item.icon size={14}/></div>
+                    <div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.label}</p>
+                      <p className="text-sm font-semibold">{item.value}</p>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+
+            <div className="bg-background border border-border rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fee Compliance</h4>
+                <div className={cn('px-2 py-0.5 rounded-full text-[10px] font-bold', studentData.fees.status === 'Paid' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent')}>
+                  {studentData.fees.status}
+                </div>
+              </div>
+              <div className="space-y-4">
+                 <div className="flex justify-between items-end">
+                   <div>
+                     <p className="text-[10px] font-bold text-muted-foreground uppercase">Outstanding</p>
+                     <p className="text-2xl font-black text-foreground">PKR {studentData.fees.outstanding}</p>
+                   </div>
+                   <div className="text-right">
+                     <p className="text-[10px] font-bold text-muted-foreground uppercase">Last Paid</p>
+                     <p className="text-xs font-bold">{studentData.fees.lastPayment}</p>
+                   </div>
+                 </div>
+                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                   <div className="h-full bg-primary" style={{ width: '100%' }} />
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Column - Analytics */}
+          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-background border border-border rounded-2xl p-6 shadow-sm flex flex-col">
+              <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Skill Radar</h4>
+              <div className="flex-1 min-h-[250px]">
+                <ReactECharts option={radarOption} style={{ height: '100%' }} />
+              </div>
+            </div>
+            <div className="bg-background border border-border rounded-2xl p-6 shadow-sm flex flex-col">
+              <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Behavioral Trend</h4>
+              <div className="flex-1 min-h-[250px]">
+                <ReactECharts option={behavioralOption} style={{ height: '100%' }} />
+              </div>
+            </div>
+            <div className="bg-background border border-border rounded-2xl p-6 shadow-sm md:col-span-2 flex flex-col">
+              <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Academic Progression (GPA)</h4>
+              <div className="flex-1 min-h-[200px]">
+                <ReactECharts option={performanceOption} style={{ height: '100%' }} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'academic' && (
+        <div className="space-y-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {studentData.sloProgress.map((slo, i) => (
+                <div key={i} className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-3">
+                   <div className="flex justify-between items-start">
+                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-black text-xs">{slo.ncp.split('-')[1]}</div>
+                     <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', slo.mastery >= 85 ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning')}>
+                       {slo.status}
+                     </span>
+                   </div>
+                   <div>
+                     <p className="text-xs font-bold text-foreground line-clamp-1">{slo.name}</p>
+                     <p className="text-[10px] font-mono text-muted-foreground uppercase">{slo.ncp}</p>
+                   </div>
+                   <div className="space-y-1">
+                     <div className="flex justify-between text-[10px] font-bold">
+                       <span>Mastery</span>
+                       <span className="text-primary">{slo.mastery}%</span>
+                     </div>
+                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                       <div className="h-full bg-primary" style={{ width: `${slo.mastery}%` }} />
+                     </div>
+                   </div>
+                </div>
+              ))}
+           </div>
+
+           <div className="bg-background border border-border rounded-2xl overflow-hidden shadow-sm">
+             <div className="p-6 border-b border-border flex items-center justify-between">
+               <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Recent Detailed Assessments</h4>
+               <Award size={18} className="text-primary" />
+             </div>
+             <table className="w-full text-sm">
+               <thead>
+                 <tr className="bg-muted/30 border-b border-border">
+                   <th className="px-6 py-4 text-left font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Subject</th>
+                   <th className="px-6 py-4 text-left font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Date</th>
+                   <th className="px-6 py-4 text-center font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Score</th>
+                   <th className="px-6 py-4 text-center font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Status</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-border">
+                  {studentData.recentAssessments.map((item, i) => (
+                    <tr key={i} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-4 font-bold text-foreground">{item.subject}</td>
+                      <td className="px-6 py-4 text-muted-foreground font-medium">{item.date}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="font-black text-primary">{item.score}%</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest">{item.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+               </tbody>
+             </table>
+           </div>
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="flex flex-col items-center justify-center py-20 bg-background border border-border border-dashed rounded-3xl">
+           <ShieldCheck size={48} className="text-primary/20 mb-4" />
+           <p className="text-lg font-black text-foreground">Archive Locked</p>
+           <p className="text-sm text-muted-foreground font-medium">Full historical logs are archived by term.</p>
+           <button className="mt-6 px-6 py-2 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20">Request Archive Access</button>
+        </div>
+      )}
     </div>
   )
 }

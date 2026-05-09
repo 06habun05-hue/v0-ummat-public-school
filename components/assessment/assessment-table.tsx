@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,9 +8,10 @@ import {
   createColumnHelper,
   ColumnDef,
 } from '@tanstack/react-table'
-import { AlertCircle, Check, Save, Trash2 } from 'lucide-react'
+import { AlertCircle, Check, Save, Trash2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAssessmentStore } from '@/lib/store/assessment-store'
 
 interface Student {
   id: string
@@ -27,75 +28,28 @@ interface Student {
 
 const grades = [1, 2, 3, 4]
 
+const gradeColorMap: Record<number, string> = {
+  4: 'bg-primary/20 text-primary border-primary/30',
+  3: 'bg-blue-500/20 text-blue-600 border-blue-500/30',
+  2: 'bg-warning/20 text-warning-foreground border-warning/30',
+  1: 'bg-accent/20 text-accent border-accent/30',
+}
+
 interface AssessmentTableProps {
   data?: Student[]
 }
 
 export function AssessmentTable({ data: initialData = [] }: AssessmentTableProps) {
+  const { saveStatus, setSaveStatus } = useAssessmentStore()
   const [data, setData] = useState<Student[]>(
     initialData.length > 0
       ? initialData
       : [
-          {
-            id: '1',
-            name: 'Ahmed Hassan',
-            listening: 4,
-            reading: 3,
-            speaking: 4,
-            understanding: 3,
-            behavior: 4,
-            uniform: 4,
-            interaction: 3,
-            attendance: 4,
-          },
-          {
-            id: '2',
-            name: 'Fatima Khan',
-            listening: 3,
-            reading: 4,
-            speaking: 3,
-            understanding: 4,
-            behavior: 4,
-            uniform: 4,
-            interaction: 4,
-            attendance: 4,
-          },
-          {
-            id: '3',
-            name: 'Muhammad Ali',
-            listening: 2,
-            reading: 2,
-            speaking: 2,
-            understanding: 2,
-            behavior: 3,
-            uniform: 3,
-            interaction: 2,
-            attendance: 3,
-          },
-          {
-            id: '4',
-            name: 'Zainab Ahmed',
-            listening: 4,
-            reading: 4,
-            speaking: 4,
-            understanding: 4,
-            behavior: 4,
-            uniform: 4,
-            interaction: 4,
-            attendance: null,
-          },
-          {
-            id: '5',
-            name: 'Hassan Ibrahim',
-            listening: 3,
-            reading: 3,
-            speaking: null,
-            understanding: 3,
-            behavior: 3,
-            uniform: 3,
-            interaction: 3,
-            attendance: 3,
-          },
+          { id: '1', name: 'Ahmed Hassan', listening: 4, reading: 3, speaking: 4, understanding: 3, behavior: 4, uniform: 4, interaction: 3, attendance: 4 },
+          { id: '2', name: 'Fatima Khan', listening: 3, reading: 4, speaking: 3, understanding: 4, behavior: 4, uniform: 4, interaction: 4, attendance: 4 },
+          { id: '3', name: 'Muhammad Ali', listening: 2, reading: 2, speaking: 2, understanding: 2, behavior: 3, uniform: 3, interaction: 2, attendance: 3 },
+          { id: '4', name: 'Zainab Ahmed', listening: 4, reading: 4, speaking: 4, understanding: 4, behavior: 4, uniform: 4, interaction: 4, attendance: null },
+          { id: '5', name: 'Hassan Ibrahim', listening: 3, reading: 3, speaking: null, understanding: 3, behavior: 3, uniform: 3, interaction: 3, attendance: 3 },
         ]
   )
 
@@ -103,7 +57,18 @@ export function AssessmentTable({ data: initialData = [] }: AssessmentTableProps
     rowIndex: number
     columnId: string
   } | null>(null)
-  const [savingRows, setSavingRows] = useState<Set<string>>(new Set())
+  
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Autosave logic
+  const triggerAutosave = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setSaveStatus('saving')
+    timeoutRef.current = setTimeout(() => {
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
+    }, 1500)
+  }, [setSaveStatus])
 
   const columnHelper = createColumnHelper<Student>()
 
@@ -124,7 +89,7 @@ export function AssessmentTable({ data: initialData = [] }: AssessmentTableProps
       header: 'Student Name',
       size: 200,
       cell: (info) => (
-        <div className="font-medium text-foreground sticky left-0 bg-background z-10 pl-4">
+        <div className="font-medium text-foreground sticky left-0 bg-background z-10 pl-4 py-2 border-r border-border">
           {info.getValue()}
         </div>
       ),
@@ -137,17 +102,16 @@ export function AssessmentTable({ data: initialData = [] }: AssessmentTableProps
           const rowIndex = info.row.index
           const columnId = grade
           const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId
-          const value = info.getValue()
-          const isRequired = !value && editingCell?.rowIndex !== rowIndex
+          const value = info.getValue() as number | null
 
           return (
             <div
               className={cn(
-                'h-10 flex items-center px-2',
-                isEditing && 'bg-background',
-                value === null && 'bg-warning/10'
+                'h-12 flex items-center px-2 cursor-pointer transition-colors border-r border-border last:border-r-0',
+                isEditing ? 'bg-primary/5 ring-2 ring-primary ring-inset z-20' : 'hover:bg-muted/50',
+                !value && !isEditing && 'bg-warning/5'
               )}
-              onDoubleClick={() => setEditingCell({ rowIndex, columnId })}
+              onClick={() => setEditingCell({ rowIndex, columnId })}
             >
               {isEditing ? (
                 <select
@@ -158,29 +122,33 @@ export function AssessmentTable({ data: initialData = [] }: AssessmentTableProps
                     const newData = [...data]
                     newData[rowIndex] = { ...newData[rowIndex], [columnId]: newValue }
                     setData(newData)
+                    triggerAutosave()
                   }}
                   onBlur={() => setEditingCell(null)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setEditingCell(null)
-                      handleSaveRow(rowIndex)
-                    } else if (e.key === 'Escape') {
+                    if (e.key === 'Enter' || e.key === 'Tab') {
                       setEditingCell(null)
                     }
                   }}
-                  className="w-full px-2 py-1 border border-primary rounded bg-background text-foreground text-sm"
+                  className="w-full h-8 bg-transparent border-none focus:ring-0 text-sm font-bold"
                 >
-                  <option value="">Select grade</option>
+                  <option value="">-</option>
                   {grades.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
+                    <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
               ) : (
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-sm font-medium">{value || '-'}</span>
-                  {isRequired && <AlertCircle size={14} className="text-warning" />}
+                <div className="flex items-center justify-center w-full">
+                  {value ? (
+                    <span className={cn(
+                      'w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold border transition-all',
+                      gradeColorMap[value]
+                    )}>
+                      {value}
+                    </span>
+                  ) : (
+                    <AlertCircle size={14} className="text-warning opacity-50" />
+                  )}
                 </div>
               )}
             </div>
@@ -190,92 +158,100 @@ export function AssessmentTable({ data: initialData = [] }: AssessmentTableProps
     ),
   ]
 
-  const handleSaveRow = useCallback(
-    (rowIndex: number) => {
-      setSavingRows((prev) => new Set(prev).add(data[rowIndex].id))
-      setTimeout(() => {
-        setSavingRows((prev) => {
-          const newSet = new Set(prev)
-          newSet.delete(data[rowIndex].id)
-          return newSet
-        })
-        toast.success('Row saved successfully')
-      }, 500)
-    },
-    [data]
-  )
-
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   })
 
+  // Calculate class averages
+  const getAverage = (columnId: typeof gradeColumns[number]) => {
+    const values = data.map(s => s[columnId]).filter(v => v !== null) as number[]
+    if (values.length === 0) return 0
+    return (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)
+  }
+
   return (
     <div className="space-y-4">
-      <div className="border border-border rounded-lg overflow-hidden">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status:</span>
+           <div className="flex items-center gap-1.5 min-w-[80px]">
+             {saveStatus === 'saving' && (
+               <>
+                 <Loader2 size={14} className="animate-spin text-primary" />
+                 <span className="text-xs font-medium text-primary">Saving...</span>
+               </>
+             )}
+             {saveStatus === 'saved' && (
+               <>
+                 <Check size={14} className="text-primary" />
+                 <span className="text-xs font-medium text-primary">Saved ✓</span>
+               </>
+             )}
+             {saveStatus === 'idle' && (
+               <span className="text-xs font-medium text-muted-foreground">Ready</span>
+             )}
+           </div>
+        </div>
+        <div className="flex gap-2">
+            <button className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-md hover:bg-muted text-xs font-medium transition-colors">
+              <Trash2 size={14} /> Clear
+            </button>
+        </div>
+      </div>
+
+      <div className="border border-border rounded-xl shadow-sm bg-background overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted border-b border-border">
+          <table className="w-full text-sm border-collapse">
+            <thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
+                <tr key={headerGroup.id} className="bg-muted/50 border-b border-border">
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-left font-semibold text-foreground"
+                      className="px-4 py-3 text-left font-semibold text-muted-foreground uppercase text-[10px] tracking-wider border-r border-border last:border-r-0"
                       style={{ width: header.getSize() }}
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      {flexRender(header.column.columnDef.header, header.getContext())}
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
-            <tbody>
-              {table.getRowModel().rows.map((row, idx) => (
-                <tr
-                  key={row.id}
-                  className={cn(
-                    'border-b border-border hover:bg-muted transition-colors',
-                    idx % 2 === 1 && 'bg-muted/30'
-                  )}
-                >
+            <tbody className="divide-y divide-border">
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-muted/20 group transition-colors">
                   {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      style={{ width: cell.column.columnDef.size }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    <td key={cell.id} className="p-0">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
                 </tr>
               ))}
+              {/* Average Row */}
+              <tr className="bg-primary/5 font-bold border-t-2 border-primary/20">
+                <td className="px-4 py-3 sticky left-0 bg-primary/5 z-10 border-r border-border">Class Average</td>
+                {gradeColumns.map((col) => (
+                  <td key={col} className="px-4 py-3 text-center border-r border-border last:border-r-0 text-primary">
+                    {getAverage(col)}
+                  </td>
+                ))}
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-3 justify-end">
-        <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium">
-          <Trash2 size={16} />
-          Clear All
+      <div className="flex justify-end gap-3 pt-2">
+        <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors text-sm font-semibold shadow-sm shadow-accent/20">
+          <AlertCircle size={16} /> Export as PDF
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 bg-danger text-danger-foreground rounded-lg hover:bg-danger/90 transition-colors text-sm font-medium">
-          <AlertCircle size={16} />
-          Export as PDF
-        </button>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
-          <Check size={16} />
-          Submit for Approval
+        <button 
+          onClick={() => toast.success('Assessment submitted for principal approval')}
+          className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all text-sm font-bold shadow-sm shadow-primary/20 active:scale-95"
+        >
+          <Check size={16} /> Submit for Approval
         </button>
       </div>
     </div>

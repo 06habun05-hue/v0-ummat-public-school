@@ -3,6 +3,7 @@
 import { Sidebar } from './sidebar'
 import { TopNav } from './top-nav'
 import { usePathname } from 'next/navigation'
+import { PageTransition } from './page-transition'
 
 const authPaths = ['/login']
 
@@ -20,7 +21,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopNav />
         <main className="flex-1 overflow-auto">
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
       </div>
     </div>

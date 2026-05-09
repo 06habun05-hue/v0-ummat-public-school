@@ -9,89 +9,136 @@ import {
   UserCheck,
   Users,
   CreditCard,
-  FileText,
+  BarChart3,
   Settings,
   LogOut,
   ChevronLeft,
+  CheckCircle,
+  BookOpen,
+  ScrollText,
+  ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useApprovalStore } from '@/lib/store/approval-store'
 
-const navigation = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { label: 'Assessment', href: '/assessment', icon: ClipboardList },
-  { label: 'Attendance', href: '/attendance', icon: UserCheck },
-  { label: 'Students', href: '/students', icon: Users },
-  { label: 'Fee Management', href: '/fees', icon: CreditCard },
-  { label: 'Reports', href: '/reports', icon: FileText },
-  { label: 'Admin', href: '/admin', icon: Settings },
+const navGroups = [
+  {
+    label: 'Core',
+    items: [
+      { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Academic',
+    items: [
+      { label: 'Assessment', href: '/assessment', icon: ClipboardList },
+      { label: 'Attendance', href: '/attendance', icon: UserCheck },
+      { label: 'Students', href: '/students', icon: Users },
+      { label: 'SLO & Curriculum', href: '/slo', icon: BookOpen },
+      { label: 'Approvals', href: '/approvals', icon: CheckCircle, badge: true },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { label: 'Fee Management', href: '/fees', icon: CreditCard },
+      { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { label: 'Audit Logs', href: '/audit', icon: ScrollText },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Admin & Settings', href: '/admin', icon: Settings },
+    ],
+  },
 ]
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
+  const pendingCount = useApprovalStore((s) => s.pending.length)
 
   return (
     <aside
       className={cn(
-        'flex flex-col bg-secondary text-secondary-foreground border-r border-border transition-all duration-300',
-        collapsed ? 'w-20' : 'w-64'
+        'flex flex-col bg-secondary text-secondary-foreground border-r border-secondary/20 transition-all duration-300 flex-shrink-0',
+        collapsed ? 'w-16' : 'w-60'
       )}
     >
-      {/* Logo Section */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      {/* Logo */}
+      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
         {!collapsed && (
-          <h1 className="font-heading font-bold text-lg text-primary">Ummat</h1>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+              <ShieldCheck size={15} className="text-white" />
+            </div>
+            <span className="font-heading font-bold text-base text-white">Ummat</span>
+          </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 hover:bg-neutral rounded-md transition-colors"
+          className="p-1.5 hover:bg-white/10 rounded-md transition-colors ml-auto"
           aria-label="Toggle sidebar"
         >
           <ChevronLeft
-            size={20}
-            className={cn(
-              'transition-transform',
-              collapsed ? 'rotate-180' : ''
-            )}
+            size={16}
+            className={cn('transition-transform text-white/70', collapsed ? 'rotate-180' : '')}
           />
         </button>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-        {navigation.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-secondary-foreground hover:bg-neutral hover:bg-opacity-50'
-              )}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon size={20} className="flex-shrink-0" />
-              {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
-            </Link>
-          )
-        })}
+      {/* Navigation */}
+      <nav className="flex-1 px-2 py-4 space-y-5 overflow-y-auto">
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            {!collapsed && (
+              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+                const showBadge = item.badge && pendingCount > 0
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 rounded-md transition-all text-sm',
+                      isActive
+                        ? 'bg-primary text-white font-semibold'
+                        : 'text-white/60 hover:text-white hover:bg-white/8'
+                    )}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <Icon size={17} className="flex-shrink-0" />
+                    {!collapsed && (
+                      <span className="flex-1 leading-none">{item.label}</span>
+                    )}
+                    {!collapsed && showBadge && (
+                      <span className="bg-warning text-warning-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* Bottom Actions */}
-      <div className="border-t border-border p-3 space-y-2">
+      {/* Logout */}
+      <div className="border-t border-white/10 p-2">
         <button
-          className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg w-full transition-colors',
-            'text-secondary-foreground hover:bg-neutral hover:bg-opacity-50'
-          )}
+          className="flex items-center gap-3 px-3 py-2 rounded-md w-full transition-colors text-white/50 hover:text-white hover:bg-white/8 text-sm"
           title={collapsed ? 'Logout' : undefined}
         >
-          <LogOut size={20} className="flex-shrink-0" />
-          {!collapsed && <span className="text-sm font-medium">Logout</span>}
+          <LogOut size={17} className="flex-shrink-0" />
+          {!collapsed && <span>Logout</span>}
         </button>
       </div>
     </aside>

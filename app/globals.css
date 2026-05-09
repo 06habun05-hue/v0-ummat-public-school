@@ -3,63 +3,59 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-}
-
 :root {
   /* Brand Colors */
-  --primary: 0 100% 41%;        /* #D3211E - Brand Red */
-  --primary-foreground: 0 0% 100%;      /* White */
-  --secondary: 0 0% 10%;        /* #1A1917 - Deep Neutral */
-  --secondary-foreground: 0 0% 100%;    /* White */
-  --success: 140 82% 28%;       /* #008B45 - Success Green */
-  --success-foreground: 0 0% 100%;      /* White */
-  --danger: 0 91% 60%;          /* #EF4444 - Error Red */
-  --danger-foreground: 0 0% 100%;       /* White */
-  --warning: 38 92% 50%;        /* #F59E0B - Warning Amber */
-  --warning-foreground: 0 0% 0%;        /* Black */
-  
-  /* Neutral System */
-  --neutral: 0 0% 97%;          /* #F7F7F7 - Light Gray */
-  --neutral-foreground: 0 0% 15%;       /* Dark Gray */
-  
-  /* UI Colors */
-  --background: 0 0% 100%;      /* White */
-  --foreground: 0 0% 15%;       /* Dark Gray */
-  --muted: 0 0% 96%;            /* #F3F4F6 - Muted Background */
-  --muted-foreground: 0 0% 56%;         /* Gray Text */
-  --border: 0 0% 92%;           /* #EBEBEB - Light Border */
-  --input: 0 0% 96%;            /* Input Background */
-  --ring: 0 100% 41%;           /* Primary Focus Ring */
-  
-  /* Radius */
-  --radius: 0.625rem;
-}
-
-.dark {
-  --primary: 0 100% 41%;
+  --primary: 133 48% 31%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 95%;
-  --secondary-foreground: 0 0% 10%;
-  --success: 140 82% 28%;
+  --accent: 1 79% 46%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 100%;
+  --success: 133 48% 31%;
   --success-foreground: 0 0% 100%;
   --danger: 0 91% 60%;
   --danger-foreground: 0 0% 100%;
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 0%;
-  
+
+  --neutral: 0 0% 97%;
+  --neutral-foreground: 0 0% 15%;
+
+  --background: 0 0% 100%;
+  --foreground: 0 0% 12%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 50%;
+  --border: 0 0% 90%;
+  --input: 0 0% 96%;
+  --ring: 133 48% 31%;
+
+  --radius: 0.625rem;
+}
+
+.dark {
+  --primary: 133 48% 40%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 1 79% 55%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 10%;
+  --success: 133 48% 40%;
+  --success-foreground: 0 0% 100%;
+  --danger: 0 91% 60%;
+  --danger-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 0%;
+
   --neutral: 0 0% 20%;
   --neutral-foreground: 0 0% 95%;
-  
-  --background: 0 0% 10%;
+
+  --background: 220 13% 10%;
   --foreground: 0 0% 95%;
-  --muted: 0 0% 20%;
-  --muted-foreground: 0 0% 70%;
-  --border: 0 0% 25%;
-  --input: 0 0% 15%;
-  --ring: 0 100% 41%;
+  --muted: 220 13% 16%;
+  --muted-foreground: 0 0% 60%;
+  --border: 220 13% 22%;
+  --input: 220 13% 14%;
+  --ring: 133 48% 40%;
 }
 
 @theme inline {
@@ -70,6 +66,8 @@
   --color-foreground: hsl(var(--foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-success: hsl(var(--success));
@@ -92,48 +90,23 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  
+  * { @apply border-border; }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-bold;
-  }
-  
-  h1 {
-    @apply text-3xl leading-tight;
-  }
-  
-  h2 {
-    @apply text-2xl leading-snug;
-  }
-  
-  h3 {
-    @apply text-xl leading-snug;
-  }
-  
-  h4 {
-    @apply text-lg leading-snug;
-  }
-  
-  p {
-    @apply text-base leading-relaxed;
-  }
-  
-  /* Focus States */
+
+  h1, h2, h3, h4, h5, h6 { @apply font-heading font-bold; }
+  h1 { @apply text-3xl leading-tight; }
+  h2 { @apply text-2xl leading-snug; }
+  h3 { @apply text-xl leading-snug; }
+  h4 { @apply text-lg leading-snug; }
+  p  { @apply text-base leading-relaxed; }
+
   button:focus-visible,
   a:focus-visible,
   input:focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
-  }
-  
-  /* Screen Reader Only */
-  .sr-only {
-    @apply sr-only;
   }
 }
