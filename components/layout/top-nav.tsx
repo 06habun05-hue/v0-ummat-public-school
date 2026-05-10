@@ -154,28 +154,37 @@ export function TopNav() {
 
             {/* Branch Selector */}
             <div className="relative">
-              <button
-                onClick={() => setBranchOpen(!branchOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-xl hover:bg-muted transition-all text-xs font-bold"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,122,48,0.5)]" />
-                {selectedBranch}
-                <ChevronDown size={13} className="text-muted-foreground" />
-              </button>
-              {branchOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 animate-slide-in">
-                  {branches.map(branch => (
-                    <button
-                      key={branch}
-                      onClick={() => { setSelectedBranch(branch); setBranchOpen(false) }}
-                      className={cn(
-                        'block w-full text-left px-4 py-2.5 text-xs font-bold transition-all',
-                        selectedBranch === branch ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                      )}
-                    >
-                      {branch}
-                    </button>
-                  ))}
+              {role === 'SUPER_ADMIN' ? (
+                <>
+                  <button
+                    onClick={() => setBranchOpen(!branchOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-xl hover:bg-muted transition-all text-xs font-bold"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,122,48,0.5)]" />
+                    {selectedBranch}
+                    <ChevronDown size={13} className="text-muted-foreground" />
+                  </button>
+                  {branchOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 animate-slide-in">
+                      {branches.map(branch => (
+                        <button
+                          key={branch}
+                          onClick={() => { setSelectedBranch(branch); setBranchOpen(false) }}
+                          className={cn(
+                            'block w-full text-left px-4 py-2.5 text-xs font-bold transition-all',
+                            selectedBranch === branch ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          {branch}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1.5 border border-border bg-muted/30 rounded-xl text-xs font-bold text-muted-foreground cursor-default">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                  {selectedBranch}
                 </div>
               )}
             </div>

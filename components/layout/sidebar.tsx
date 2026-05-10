@@ -58,6 +58,8 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   TEACHER: ['CORE', 'ACADEMIC'],
 }
 
+import Image from 'next/image'
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
@@ -78,11 +80,11 @@ export function Sidebar() {
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/10">
-              <ShieldCheck size={18} className="text-white" />
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/10 overflow-hidden">
+              <Image src="/logo.png" alt="Ummat Logo" width={32} height={32} className="object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-heading font-black text-sm text-white leading-none">Ummat</span>
+              <span className="font-heading font-black text-sm text-white tracking-tight leading-none">Ummat</span>
               <span className="text-[9px] font-bold text-white/50 uppercase tracking-tighter mt-1">Systems</span>
             </div>
           </div>

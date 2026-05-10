@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { Eye, EyeOff, Mail, Lock, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useUIStore } from '@/lib/store/ui-store'
+import { cn } from '@/lib/utils'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -28,10 +29,18 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   })
+
+  const [selectedBranchInForm, setSelectedBranchInForm] = useState('Main Campus')
+  
+  const setBranch = (b: string) => {
+    setSelectedBranchInForm(b)
+    setValue('branch', b)
+  }
 
   const branches = ['Main Campus', 'North Campus', 'South Campus']
 
@@ -49,6 +58,10 @@ export default function LoginPage() {
         setRole('TEACHER')
       } else if (email === 'accountant@ummat.edu' && password === 'account123') {
         setRole('ACCOUNTANT')
+      } else if (email === 'north.admin@ummat.edu' && password === 'admin123') {
+        setRole('BRANCH_ADMIN')
+      } else if (email === 'south.admin@ummat.edu' && password === 'admin123') {
+        setRole('BRANCH_ADMIN')
       } else {
         toast.error('Invalid credentials. Try admin@ummat.edu / admin123')
         return
@@ -135,25 +148,38 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="branch" className="block text-sm font-medium text-foreground mb-2">
-                Branch <span className="text-danger">*</span>
+              <label className="block text-sm font-medium text-foreground mb-4">
+                Select Branch <span className="text-danger">*</span>
               </label>
-              <div className="relative">
-                <Building2
-                  size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                />
-                <select
-                  {...register('branch')}
-                  id="branch"
-                  className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none"
-                >
-                  <option value="">Select a branch</option>
-                  {branches.map(b => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-3 gap-3">
+                {branches.map((b) => (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() => setBranch(b)}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all gap-2 group",
+                      selectedBranchInForm === b
+                        ? "border-primary bg-primary/5 ring-4 ring-primary/10"
+                        : "border-border bg-background hover:border-primary/30 hover:bg-muted/50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                      selectedBranchInForm === b ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                    )}>
+                      <Building2 size={20} />
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-black uppercase tracking-tighter text-center leading-tight",
+                      selectedBranchInForm === b ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {b.split(' ')[0]}<br/>{b.split(' ')[1] || ''}
+                    </span>
+                  </button>
+                ))}
               </div>
+              <input type="hidden" {...register('branch')} value={selectedBranchInForm} />
               {errors.branch && (
                 <p className="text-xs text-danger mt-1.5">{errors.branch.message}</p>
               )}

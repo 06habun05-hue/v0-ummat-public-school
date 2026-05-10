@@ -6,6 +6,7 @@ import { Users, BookOpen, CheckCircle2, AlertCircle, CreditCard, Calendar, Chevr
 import { useState } from 'react'
 import Link from 'next/link'
 import { useApprovalStore } from '@/lib/store/approval-store'
+import { useUIStore } from '@/lib/store/ui-store'
 import { cn } from '@/lib/utils'
 
 const classPerformanceOpts = {
@@ -44,6 +45,7 @@ const recentActivity = [
   { user: 'Mr. Tariq',      action: 'Submitted assessment', detail: 'Class 9-B · Math · Chapter 1', time: '2h ago', type: 'submit' },
 ]
 
+
 const actColor: Record<string,string> = {
   submit: 'bg-primary/10 text-primary',
   approve: 'bg-primary/10 text-primary',
@@ -54,14 +56,31 @@ export function Dashboard() {
   const [dateRange, setDateRange] = useState('month')
   const [dateOpen, setDateOpen] = useState(false)
   const { pending } = useApprovalStore()
+  const { role, selectedBranch } = useUIStore()
+
+  const isBranchAdmin = role === 'BRANCH_ADMIN'
+  const isSuperAdmin = role === 'SUPER_ADMIN'
+
+  // Mock data variation based on branch
+  const getBranchMultiplier = () => {
+    if (selectedBranch === 'North Campus') return 0.8
+    if (selectedBranch === 'South Campus') return 0.6
+    return 1.0
+  }
+
+  const m = getBranchMultiplier()
 
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">Analytics Overview</h2>
-          <p className="text-sm text-muted-foreground mt-1">Real-time metrics and performance insights</p>
+          <h2 className="text-2xl font-heading font-bold text-foreground">
+            {isBranchAdmin ? `${selectedBranch} Overview` : 'Analytics Overview'}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isBranchAdmin ? `Performance metrics for ${selectedBranch}` : 'Real-time metrics and performance insights'}
+          </p>
         </div>
         <div className="relative">
           <button onClick={() => setDateOpen(!dateOpen)} className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium">
@@ -83,11 +102,11 @@ export function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <MetricCard label="Total Students" value="2,458" icon={Users} trend={{ percentage: 12, isPositive: true }} />
-        <MetricCard label="Total Teachers" value="124" icon={BookOpen} trend={{ percentage: 5, isPositive: true }} />
-        <MetricCard label="Attendance Rate" value="94.2%" icon={CheckCircle2} trend={{ percentage: 3, isPositive: true }} />
-        <MetricCard label="Pending Approvals" value={String(pending.length)} icon={AlertCircle} trend={{ percentage: 8, isPositive: false }} />
-        <MetricCard label="Fee Collection" value="87.5%" icon={CreditCard} trend={{ percentage: 6, isPositive: true }} />
+        <MetricCard label="Total Students" value={String(Math.round(2458 * m))} icon={Users} trend={{ percentage: 12, isPositive: true }} />
+        <MetricCard label="Total Teachers" value={String(Math.round(124 * m))} icon={BookOpen} trend={{ percentage: 5, isPositive: true }} />
+        <MetricCard label="Attendance Rate" value={(94.2 * m).toFixed(1) + '%'} icon={CheckCircle2} trend={{ percentage: 3, isPositive: true }} />
+        <MetricCard label="Pending Approvals" value={String(Math.round(pending.length * m))} icon={AlertCircle} trend={{ percentage: 8, isPositive: false }} />
+        <MetricCard label="Fee Collection" value={(87.5 * m).toFixed(1) + '%'} icon={CreditCard} trend={{ percentage: 6, isPositive: true }} />
       </div>
 
       {/* Charts Row */}
