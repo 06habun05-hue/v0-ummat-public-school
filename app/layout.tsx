@@ -51,7 +51,7 @@ export default function RootLayout({
       lang="en"
       className={`${_geist.variable} ${_geistMono.variable} ${_plusJakarta.variable} bg-background`}
     >
-      <body className="font-sans antialiased text-foreground">
+      <body className="font-sans antialiased text-foreground overflow-hidden scrollbar-hide">
         <Shell>
           {children}
         </Shell>

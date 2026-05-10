@@ -84,7 +84,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary/80 flex-col justify-center items-center p-8 text-primary-foreground">
         <div className="max-w-md text-center">
           <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mb-8 mx-auto shadow-xl">
-            <Image src="/logo.png" alt="Ummat Logo" width={80} height={80} className="object-contain" />
+            <Image src="/logo.jpg" alt="Ummat Logo" width={80} height={80} className="object-contain" />
           </div>
           <h1 className="text-4xl font-heading font-black mb-4 tracking-tight">Ummat Systems</h1>
           <p className="text-lg font-medium opacity-90 mb-8 leading-relaxed">
@@ -119,7 +119,7 @@ export default function LoginPage() {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-10 text-center">
             <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mb-4 mx-auto shadow-md border border-border">
-              <Image src="/logo.png" alt="Ummat Logo" width={48} height={48} className="object-contain" />
+              <Image src="/logo.jpg" alt="Ummat Logo" width={48} height={48} className="object-contain" />
             </div>
             <h1 className="text-2xl font-heading font-black text-foreground tracking-tight">Ummat</h1>
           </div>

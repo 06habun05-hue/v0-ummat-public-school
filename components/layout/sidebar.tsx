@@ -81,7 +81,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/10 overflow-hidden">
-              <Image src="/logo.png" alt="Ummat Logo" width={32} height={32} className="object-contain" />
+              <Image src="/logo.jpg" alt="Ummat Logo" width={32} height={32} className="object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-heading font-black text-sm text-white tracking-tight leading-none">Ummat</span>
