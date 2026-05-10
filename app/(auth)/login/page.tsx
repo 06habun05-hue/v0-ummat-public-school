@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Mail, Lock, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useUIStore } from '@/lib/store/ui-store'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -22,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const { setIsAuthenticated, setRole, setSelectedBranch } = useUIStore()
   const {
     register,
     handleSubmit,
@@ -35,8 +38,24 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      // Mock authentication
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Dummy authentication logic
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      const { email, password, branch } = data
+      
+      if (email === 'admin@ummat.edu' && password === 'admin123') {
+        setRole('SUPER_ADMIN')
+      } else if (email === 'teacher@ummat.edu' && password === 'teacher123') {
+        setRole('TEACHER')
+      } else if (email === 'accountant@ummat.edu' && password === 'account123') {
+        setRole('ACCOUNTANT')
+      } else {
+        toast.error('Invalid credentials. Try admin@ummat.edu / admin123')
+        return
+      }
+
+      setIsAuthenticated(true)
+      setSelectedBranch(branch)
       toast.success('Login successful!')
       router.push('/')
     } catch (error) {
@@ -51,11 +70,11 @@ export default function LoginPage() {
       {/* Left: Branding (hidden on mobile) */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary/80 flex-col justify-center items-center p-8 text-primary-foreground">
         <div className="max-w-md text-center">
-          <div className="w-16 h-16 bg-primary-foreground rounded-xl flex items-center justify-center mb-6 mx-auto">
-            <span className="text-2xl font-heading font-bold text-primary">U</span>
+          <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mb-8 mx-auto shadow-xl">
+            <Image src="/logo.png" alt="Ummat Logo" width={80} height={80} className="object-contain" />
           </div>
-          <h1 className="text-4xl font-heading font-bold mb-4">Ummat Systems</h1>
-          <p className="text-lg opacity-90 mb-8">
+          <h1 className="text-4xl font-heading font-black mb-4 tracking-tight">Ummat Systems</h1>
+          <p className="text-lg font-medium opacity-90 mb-8 leading-relaxed">
             Enterprise academic management platform for modern institutions
           </p>
           <div className="space-y-4 text-left">
@@ -85,11 +104,11 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 md:p-12">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden mb-8 text-center">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-3 mx-auto">
-              <span className="text-xl font-heading font-bold text-primary-foreground">U</span>
+          <div className="lg:hidden mb-10 text-center">
+            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mb-4 mx-auto shadow-md border border-border">
+              <Image src="/logo.png" alt="Ummat Logo" width={48} height={48} className="object-contain" />
             </div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">Ummat</h1>
+            <h1 className="text-2xl font-heading font-black text-foreground tracking-tight">Ummat</h1>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

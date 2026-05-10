@@ -48,9 +48,8 @@ export function TopNav() {
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
-  const { selectedBranch, setSelectedBranch, isDarkMode, toggleDarkMode, role, setRole } = useUIStore()
-  const branches = ['All Branches', 'Main Campus', 'North Campus', 'South Campus']
-  const roles: UserRole[] = ['SUPER_ADMIN', 'BRANCH_ADMIN', 'ACCOUNTANT', 'TEACHER']
+  const { selectedBranch, setSelectedBranch, isDarkMode, toggleDarkMode, role, logout } = useUIStore()
+  const branches = ['Main Campus', 'North Campus', 'South Campus']
   const [branchOpen, setBranchOpen] = useState(false)
 
   const pageTitle = Object.entries(pathLabels).find(([key]) =>
@@ -145,33 +144,10 @@ export function TopNav() {
               <kbd className="text-[10px] bg-background border border-border px-1.5 py-0.5 rounded-md font-mono font-bold shadow-sm">⌘K</kbd>
             </button>
 
-            {/* Role Switcher (Preview Only) */}
-            <div className="relative">
-              <button
-                onClick={() => setRoleOpen(!roleOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-xl hover:bg-accent/20 transition-all text-[11px] font-black text-accent uppercase tracking-wider"
-              >
-                <ShieldCheck size={13} />
-                {role.replace('_', ' ')}
-                <ChevronDown size={13} />
-              </button>
-              {roleOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 overflow-hidden animate-slide-in">
-                  <p className="px-4 py-2 text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">Switch Identity</p>
-                  {roles.map(r => (
-                    <button
-                      key={r}
-                      onClick={() => { setRole(r); setRoleOpen(false) }}
-                      className={cn(
-                        'block w-full text-left px-4 py-2.5 text-xs font-bold transition-all',
-                        role === r ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                      )}
-                    >
-                      {r.replace('_', ' ')}
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Role Badge (Static) */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-xl text-[10px] font-black text-primary uppercase tracking-wider">
+              <ShieldCheck size={12} />
+              {role.replace('_', ' ')}
             </div>
 
             <div className="w-px h-4 bg-border mx-1" />
@@ -267,7 +243,10 @@ export function TopNav() {
                   <Link href="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
                     <Settings size={15} /> My Settings
                   </Link>
-                  <button className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-accent hover:bg-accent/5 transition-all">
+                  <button 
+                    onClick={() => { logout(); setProfileOpen(false) }}
+                    className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-accent hover:bg-accent/5 transition-all"
+                  >
                     <LogOut size={15} /> Sign Out
                   </button>
                 </div>

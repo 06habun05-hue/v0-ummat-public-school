@@ -11,10 +11,13 @@ interface UIStore {
   toggleDarkMode: () => void
   role: UserRole
   setRole: (role: UserRole) => void
+  isAuthenticated: boolean
+  setIsAuthenticated: (v: boolean) => void
+  logout: () => void
 }
 
 export const useUIStore = create<UIStore>((set) => ({
-  selectedBranch: 'All Branches',
+  selectedBranch: 'Main Campus',
   setSelectedBranch: (branch) => set({ selectedBranch: branch }),
   sidebarCollapsed: false,
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
@@ -22,4 +25,7 @@ export const useUIStore = create<UIStore>((set) => ({
   toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
   role: 'SUPER_ADMIN',
   setRole: (role) => set({ role }),
+  isAuthenticated: false,
+  setIsAuthenticated: (v) => set({ isAuthenticated: v }),
+  logout: () => set({ isAuthenticated: false, role: 'SUPER_ADMIN' }),
 }))
