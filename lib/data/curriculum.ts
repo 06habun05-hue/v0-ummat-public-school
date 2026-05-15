@@ -6,6 +6,16 @@ export interface SLO {
   ncp: string
 }
 
+export interface SLOAssessmentEvent {
+  id: string
+  sloId: string
+  class: string
+  testDate: string
+  testMethod: 'MCQs' | 'Writing' | 'Oral' | 'Practical' | 'Project'
+  teachingMethod: 'Lecture' | 'Group Activity' | 'Direct Instruction' | 'Research'
+  status: 'Completed' | 'Pending' | 'Re-test Scheduled'
+}
+
 export const mockSLOs: SLO[] = [
   { id: 'SLO-001', description: 'Students can identify main ideas in a passage', subject: 'English', chapter: 'Chapter 1', ncp: 'NCP-LIT-01' },
   { id: 'SLO-002', description: 'Students can solve quadratic equations', subject: 'Mathematics', chapter: 'Chapter 3', ncp: 'NCP-MATH-02' },
@@ -19,9 +29,18 @@ export const mockSLOs: SLO[] = [
   { id: 'SLO-010', description: 'Students understand punctuation rules', subject: 'English', chapter: 'Chapter 1', ncp: 'NCP-LIT-04' },
 ]
 
+export const mockSLOEvents: SLOAssessmentEvent[] = [
+  { id: 'EVT-001', sloId: 'SLO-001', class: '10-A', testDate: '2025-05-10', testMethod: 'Writing', teachingMethod: 'Lecture', status: 'Completed' },
+  { id: 'EVT-002', sloId: 'SLO-004', class: '10-A', testDate: '2025-05-12', testMethod: 'Oral', teachingMethod: 'Direct Instruction', status: 'Completed' },
+  { id: 'EVT-003', sloId: 'SLO-008', class: '9-B', testDate: '2025-05-14', testMethod: 'MCQs', teachingMethod: 'Research', status: 'Completed' },
+  { id: 'EVT-004', sloId: 'SLO-002', class: '10-B', testDate: '2025-05-15', testMethod: 'Writing', teachingMethod: 'Direct Instruction', status: 'Pending' },
+  { id: 'EVT-005', sloId: 'SLO-005', class: '10-A', testDate: '2025-05-18', testMethod: 'Oral', teachingMethod: 'Group Activity', status: 'Re-test Scheduled' },
+]
+
 export const getSLOsByChapter = (subject: string, chapter: string): SLO[] => {
   return mockSLOs.filter(s => s.subject === subject && s.chapter === chapter)
 }
 
 export const subjects = ['English', 'Mathematics', 'Science', 'Islamic Studies', 'Social Studies']
 export const chapters = ['Chapter 1', 'Chapter 2', 'Chapter 3', 'Chapter 4']
+

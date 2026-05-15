@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/select'
 
 import { mockSLOs, subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
+import { AssessmentLog } from '@/components/slo/assessment-log'
+
 
 const subjects = ['All', ...curriculumSubjects]
 const chapters = ['All', ...curriculumChapters]
@@ -26,7 +28,8 @@ const curriculumMap = [
 const mapSubjects = curriculumSubjects
 
 export default function SLOPage() {
-  const [activeTab, setActiveTab] = useState<'registry' | 'map'>('registry')
+  const [activeTab, setActiveTab] = useState<'registry' | 'map' | 'log'>('registry')
+
   const [search, setSearch] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [chapterFilter, setChapterFilter] = useState('All')
@@ -51,13 +54,25 @@ export default function SLOPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
-        {[['registry', 'SLO Registry'], ['map', 'Curriculum Map']].map(([key, label]) => (
-          <button key={key} onClick={() => setActiveTab(key as 'registry' | 'map')} className={cn('px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 -mb-px', activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
+      <div className="flex gap-1 border-b border-border overflow-x-auto">
+        {[
+          ['registry', 'SLO Registry'],
+          ['map', 'Curriculum Map'],
+          ['log', 'Assessment Log']
+        ].map(([key, label]) => (
+          <button 
+            key={key} 
+            onClick={() => setActiveTab(key as any)} 
+            className={cn(
+              'px-6 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 -mb-px whitespace-nowrap', 
+              activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
             {label}
           </button>
         ))}
       </div>
+
 
       {activeTab === 'registry' && (
         <>
@@ -165,6 +180,9 @@ export default function SLOPage() {
           </div>
         </div>
       )}
+
+      {activeTab === 'log' && <AssessmentLog />}
+
 
       {/* Add SLO Modal */}
       {showModal && (
