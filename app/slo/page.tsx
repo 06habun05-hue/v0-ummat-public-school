@@ -179,11 +179,16 @@ export default function SLOPage() {
               <h3 className="font-heading font-bold text-foreground">Add New SLO</h3>
               <button onClick={() => setShowModal(false)} className="p-1 hover:bg-muted rounded-md"><X size={16} /></button>
             </div>
-            {[['SLO Code', 'e.g. SLO-009'], ['Description', 'Describe the learning outcome...'], ['NCP Alignment', 'e.g. NCP-LIT-03']].map(([label, placeholder]) => (
+            {[
+              ['SLO Code', 'e.g. SLO-009'],
+              ['Description', 'Describe the learning outcome...'],
+              ['NCP Alignment', 'e.g. NCP-LIT-03'],
+              ['NCP Description', 'Detailed NCP alignment details...']
+            ].map(([label, placeholder]) => (
               <div key={label}>
                 <label className="block text-xs font-semibold text-foreground mb-1.5">{label}</label>
-                {label === 'Description' ? (
-                  <textarea rows={3} placeholder={placeholder} className="w-full px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+                {label.includes('Description') ? (
+                  <textarea rows={label === 'Description' ? 3 : 2} placeholder={placeholder} className="w-full px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
                 ) : (
                   <input placeholder={placeholder} className="w-full px-3 py-2 border border-border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
                 )}
