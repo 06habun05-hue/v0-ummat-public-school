@@ -34,6 +34,7 @@ const ALL_NAV_GROUPS = {
       { label: 'Attendance', href: '/attendance', icon: UserCheck },
       { label: 'Students', href: '/students', icon: Users },
       { label: 'SLO & Curriculum', href: '/slo', icon: BookOpen },
+      { label: 'SLO Tracking', href: '/slo-tracking', icon: ScrollText },
       { label: 'Approvals', href: '/approvals', icon: CheckCircle, badge: true },
     ],
   },
