@@ -38,24 +38,24 @@ export default function AssessmentPage() {
   }, [filters.subject, filters.chapter])
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">
             Assessment Matrix
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
             Orchestrate grading, SLO mastery, and academic performance metrics
           </p>
         </motion.div>
         
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-border bg-background hover:bg-primary hover:text-white transition-all text-xs font-black uppercase tracking-widest shadow-sm">
-            Export Analytics
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 sm:gap-3">
+          <Button variant="outline" className="flex-1 sm:flex-none h-10 sm:h-12 px-4 sm:px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-primary hover:text-white transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm">
+            Export
           </Button>
-          <Button className="h-12 px-8 rounded-2xl bg-primary text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">
-            Commit Grades
+          <Button className="flex-1 sm:flex-none h-10 sm:h-12 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-primary text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">
+            Commit
           </Button>
         </motion.div>
       </div>
@@ -64,9 +64,9 @@ export default function AssessmentPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-background/50 backdrop-blur-md border border-border rounded-3xl p-6 shadow-xl sticky top-20 z-30"
+        className="bg-background/50 backdrop-blur-md border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl sticky top-20 z-30"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Branch */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
@@ -82,10 +82,10 @@ export default function AssessmentPage() {
                 })
               }}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <MapPin size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Branch" />
+                  <SelectValue placeholder="Branch" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -105,10 +105,10 @@ export default function AssessmentPage() {
               value={filters.class}
               onValueChange={(val) => setFilters({ ...filters, class: val })}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <Filter size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Class" />
+                  <SelectValue placeholder="Class" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -128,10 +128,10 @@ export default function AssessmentPage() {
               value={filters.subject}
               onValueChange={(val) => setFilters({ ...filters, subject: val })}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <BookOpen size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Subject" />
+                  <SelectValue placeholder="Subject" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -151,10 +151,10 @@ export default function AssessmentPage() {
               value={filters.chapter}
               onValueChange={(val) => setFilters({ ...filters, chapter: val })}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <LayoutGrid size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Chapter" />
+                  <SelectValue placeholder="Chapter" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -167,15 +167,15 @@ export default function AssessmentPage() {
         </div>
 
         {/* Dynamic Context Bar */}
-        <div className="mt-6 flex items-center justify-between py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
+        <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-               <span className="text-[10px] font-black text-foreground uppercase tracking-widest">Matrix Unlocked</span>
+               <span className="text-[10px] font-black text-foreground uppercase tracking-widest">Unlocked</span>
             </div>
-            <div className="h-4 w-px bg-border" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              Context: <span className="text-primary">{filters.branch}</span> <ChevronRight size={10} className="inline mx-1" /> <span className="text-primary">{filters.class}</span> <ChevronRight size={10} className="inline mx-1" /> <span className="text-primary">{filters.subject}</span>
+            <div className="h-4 w-px bg-border hidden sm:block" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
+              {filters.class} <ChevronRight size={10} className="inline mx-1" /> {filters.subject}
             </p>
           </div>
           <div className="flex items-center gap-3">

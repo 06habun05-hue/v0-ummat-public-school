@@ -1,11 +1,22 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { Bell, Settings, LogOut, ChevronDown, Search, Sun, Moon, X, ShieldCheck } from 'lucide-react'
+import { 
+  Bell, Settings, LogOut, ChevronDown, Search, 
+  Sun, Moon, X, ShieldCheck, Menu 
+} from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/lib/store/ui-store'
 import Link from 'next/link'
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet'
+import { SidebarContent } from './sidebar'
+import Image from 'next/image'
 
 const pathLabels: Record<string, string> = {
   '/': 'Dashboard',
@@ -44,7 +55,7 @@ export function TopNav() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [roleOpen, setRoleOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -124,12 +135,36 @@ export function TopNav() {
       )}
 
       <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
-        <div className="flex items-center justify-between px-6 py-3.5">
-          {/* Left: Breadcrumb */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 hidden sm:block">Portal</span>
-            <span className="text-muted-foreground/30 text-[10px] hidden sm:block">/</span>
-            <h1 className="text-sm font-heading font-black text-foreground tracking-tight">{pageTitle}</h1>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5">
+          {/* Left: Menu & Breadcrumb */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button className="lg:hidden p-2 hover:bg-muted rounded-xl transition-colors text-foreground">
+                  <Menu size={20} />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-72 bg-secondary border-r-white/5 border-none">
+                <SheetHeader className="px-5 py-6 border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/10 overflow-hidden">
+                      <Image src="/logo.jpg" alt="Ummat Logo" width={32} height={32} className="object-contain" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="font-heading font-black text-sm text-white tracking-tight leading-none">Ummat</span>
+                      <span className="text-[9px] font-bold text-white/50 uppercase tracking-tighter mt-1">Systems</span>
+                    </div>
+                  </div>
+                </SheetHeader>
+                <SidebarContent onItemClick={() => setMobileMenuOpen(false)} />
+              </SheetContent>
+            </Sheet>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60 hidden md:block">Portal</span>
+              <span className="text-muted-foreground/30 text-[10px] hidden md:block">/</span>
+              <h1 className="text-sm font-heading font-black text-foreground tracking-tight">{pageTitle}</h1>
+            </div>
           </div>
 
           {/* Right */}

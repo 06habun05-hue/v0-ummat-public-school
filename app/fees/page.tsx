@@ -190,14 +190,14 @@ export default function FeesPage() {
         </Card>
       </div>
 
-      {/* Table */}
+      {/* Table/Card View */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
         className="bg-background border border-border rounded-3xl overflow-hidden shadow-2xl"
       >
-        <div className="flex flex-col sm:flex-row gap-4 p-6 border-b border-border bg-muted/20">
+        <div className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6 border-b border-border bg-muted/20">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input 
@@ -223,7 +223,8 @@ export default function FeesPage() {
           </Select>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
@@ -245,7 +246,7 @@ export default function FeesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((f, i) => (
+              {filtered.map((f) => (
                 <tr key={f.id} className="group hover:bg-primary/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
@@ -291,6 +292,64 @@ export default function FeesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden divide-y divide-border">
+          {filtered.map((f) => (
+            <div key={f.id} className="p-5 space-y-4 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xs font-black text-muted-foreground">
+                    {f.name.split(' ').map(n=>n[0]).join('')}
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground text-sm leading-tight">{f.name}</p>
+                    <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{f.id}</p>
+                  </div>
+                </div>
+                <Badge className={cn('text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border shadow-sm', statusColors[f.status])}>
+                  {f.status}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Outstanding</p>
+                  <p className={cn('text-sm font-black tracking-tight', f.balance > 0 ? 'text-accent' : 'text-primary')}>
+                    PKR {f.balance.toLocaleString()}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Last Settlement</p>
+                  <p className="text-xs font-bold text-foreground/80">
+                    {f.lastPayment ? format(new Date(f.lastPayment), 'MMM dd') : '—'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-border bg-muted/30 text-muted-foreground">
+                  {f.class}
+                </Badge>
+                <Button 
+                  size="sm" 
+                  className="rounded-xl h-8 px-4 text-[9px] font-black uppercase tracking-widest shadow-md transition-all disabled:opacity-30"
+                  disabled={f.status === 'Paid'}
+                >
+                  {f.status === 'Paid' ? 'Audited' : 'Settle'}
+                </Button>
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div className="p-10 text-center space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground/30">
+                <Search size={24} />
+              </div>
+              <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No matching profiles</p>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

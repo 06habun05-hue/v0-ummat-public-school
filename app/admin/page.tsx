@@ -56,15 +56,15 @@ export default function AdminPage() {
   const [darkMode, setDarkMode] = useState(false)
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
         >
-          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">Admin Control Center</h2>
-          <p className="text-sm text-muted-foreground mt-1">Orchestrate users, branches, and system-wide configurations</p>
+          <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">Admin Control Center</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">Orchestrate users, branches, and system-wide configurations</p>
         </motion.div>
         
         <motion.div 
@@ -72,24 +72,24 @@ export default function AdminPage() {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-3"
         >
-          <div className="px-4 py-2 bg-background border border-border rounded-2xl shadow-sm flex items-center gap-3">
+          <div className="px-3 sm:px-4 py-2 bg-background border border-border rounded-xl sm:rounded-2xl shadow-sm flex items-center gap-3">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">System Health</span>
-              <span className="text-xs font-bold text-emerald-500 mt-1">Operational</span>
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">System Health</span>
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-500 mt-1">Operational</span>
             </div>
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
         </motion.div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide pb-px">
+      <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide pb-px -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map(t => (
           <button 
             key={t} 
             onClick={() => setActiveTab(t)} 
             className={cn(
-              'px-6 py-4 text-xs font-black uppercase tracking-widest border-b-2 -mb-px transition-all whitespace-nowrap', 
+              'px-4 sm:px-6 py-4 text-[10px] sm:text-xs font-black uppercase tracking-widest border-b-2 -mb-px transition-all whitespace-nowrap', 
               activeTab === t 
                 ? 'border-primary text-primary' 
                 : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
@@ -113,15 +113,16 @@ export default function AdminPage() {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="relative w-full sm:max-w-xs">
-                   <UsersIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                   <input placeholder="Search users..." className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                   <UsersIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                   <input placeholder="Search users..." className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl sm:rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-inner" />
                 </div>
-                <Button onClick={() => setShowUserModal(true)} className="w-full sm:w-auto px-6 py-2 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                <Button onClick={() => setShowUserModal(true)} className="w-full sm:w-auto h-12 px-8 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/20">
                   <Plus size={16} className="mr-2" /> Add New User
                 </Button>
               </div>
 
-              <div className="border border-border rounded-2xl overflow-hidden shadow-xl bg-background">
+              {/* User List: Desktop Table */}
+              <div className="hidden lg:block border border-border rounded-2xl overflow-hidden shadow-xl bg-background">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -132,7 +133,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {mockUsers.map((u, i) => (
+                      {mockUsers.map((u) => (
                         <tr key={u.id} className="group hover:bg-primary/[0.02] transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
@@ -172,12 +173,56 @@ export default function AdminPage() {
                   </table>
                 </div>
               </div>
+
+              {/* User List: Mobile Cards */}
+              <div className="lg:hidden space-y-4">
+                {mockUsers.map((u) => (
+                  <div key={u.id} className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-black shadow-inner border border-white/10">
+                          {u.name.split(' ').map(n=>n[0]).slice(0,2).join('')}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-foreground text-sm leading-tight">{u.name}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{u.id}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button className="p-2 hover:bg-muted rounded-xl text-muted-foreground"><Edit size={16} /></button>
+                        <button className="p-2 hover:bg-muted rounded-xl text-muted-foreground"><Trash2 size={16} /></button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 py-2 border-y border-border/50">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Access Role</p>
+                        <Badge variant="outline" className={cn('text-[9px] font-black uppercase tracking-wider px-2 py-0.5', roleColors[u.role])}>
+                          {u.role}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Branch</p>
+                        <p className="text-[10px] font-bold text-foreground">{u.branch}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-medium text-muted-foreground truncate max-w-[180px]">{u.email}</p>
+                      <div className="flex items-center gap-2">
+                        <div className={cn('w-1.5 h-1.5 rounded-full', u.status==='Active' ? 'bg-emerald-500' : 'bg-muted-foreground/30')} />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-foreground">{u.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* ── Branches ── */}
           {activeTab === 'Branches' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockBranches.map(b => (
                 <Card key={b.id} className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-border overflow-hidden relative">
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -204,7 +249,7 @@ export default function AdminPage() {
                         <span className="font-black text-foreground">{b.principal}</span>
                       </div>
                       <div className="flex justify-between text-xs py-2 border-b border-border/50">
-                        <span className="text-muted-foreground font-medium">Total Enrollment</span>
+                        <span className="text-muted-foreground font-medium">Enrollment</span>
                         <span className="font-black text-foreground">{b.students.toLocaleString()} Students</span>
                       </div>
                     </div>
@@ -219,7 +264,7 @@ export default function AdminPage() {
                   <Plus size={32} />
                 </div>
                 <div className="text-center">
-                  <span className="text-sm font-black uppercase tracking-widest">Provision New Branch</span>
+                  <span className="text-sm font-black uppercase tracking-widest">Provision Branch</span>
                   <p className="text-[10px] opacity-60 mt-1">Initialize settings for a new campus</p>
                 </div>
               </div>
@@ -228,13 +273,13 @@ export default function AdminPage() {
 
           {/* ── Academic Config ── */}
           {activeTab === 'Academic Config' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="border-border shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-lg font-heading font-black uppercase tracking-wider flex items-center gap-2">
+                  <CardTitle className="text-lg font-heading font-black uppercase tracking-wider flex items-center gap-2 text-foreground">
                     <Calendar size={18} className="text-primary" /> Term Schedule
                   </CardTitle>
-                  <CardDescription>Define academic cycles and grading parameters</CardDescription>
+                  <CardDescription className="text-xs font-medium">Define academic cycles and grading parameters</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {[
@@ -258,7 +303,7 @@ export default function AdminPage() {
                       </button>
                     </div>
                   ))}
-                  <Button className="w-full bg-primary text-white rounded-xl py-6 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 mt-2">
+                  <Button className="w-full h-12 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 mt-2">
                     Publish New Academic Calendar
                   </Button>
                 </CardContent>
@@ -266,19 +311,19 @@ export default function AdminPage() {
 
               <div className="space-y-6">
                  <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6">
-                   <h4 className="text-sm font-black text-primary uppercase tracking-widest mb-3">Policy Insights</h4>
+                   <h4 className="text-[10px] font-black text-primary uppercase tracking-widest mb-3">Policy Insights</h4>
                    <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                      The academic calendar is synchronized across all branches. Changing the Term start/end dates will automatically update the Teacher Assessment Matrix and Student Attendance Registries.
                    </p>
                  </div>
-                 <div className="bg-background border border-border rounded-3xl p-6 shadow-sm flex items-center justify-between">
+                 <div className="bg-background border border-border rounded-3xl p-5 sm:p-6 shadow-sm flex items-center justify-between">
                    <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-                       <AlertCircle size={24} />
+                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                       <Shield size={20} />
                      </div>
                      <div>
-                       <h5 className="text-sm font-black text-foreground uppercase tracking-widest">Locked Period</h5>
-                       <p className="text-[10px] text-muted-foreground font-bold mt-0.5">Previous term records are currently archived.</p>
+                       <h5 className="text-[10px] sm:text-xs font-black text-foreground uppercase tracking-widest">Locked Period</h5>
+                       <p className="text-[9px] text-muted-foreground font-bold mt-0.5">Previous records are archived.</p>
                      </div>
                    </div>
                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary">Unlock</Button>
@@ -289,16 +334,16 @@ export default function AdminPage() {
 
           {/* ── System ── */}
           {activeTab === 'System' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: 'Appearance', desc: 'Interface theme and branding', icon: Palette, items: [
+                { title: 'Appearance', desc: 'Branding and themes', icon: Palette, items: [
                   { label: 'Deep Dark Mode', status: darkMode ? 'Active' : 'Disabled', action: () => setDarkMode(!darkMode) }
                 ]},
-                { title: 'Security', desc: 'Access logs and encryption', icon: Lock, items: [
+                { title: 'Security', desc: 'Access logs & safety', icon: Lock, items: [
                   { label: '2FA Enforcement', status: 'Required' },
-                  { label: 'Audit Trail Retention', status: '365 Days' }
+                  { label: 'Audit Log Retention', status: '365 Days' }
                 ]},
-                { title: 'Database', desc: 'Storage and cloud synchronization', icon: Database, items: [
+                { title: 'Database', desc: 'Storage & cloud sync', icon: Database, items: [
                   { label: 'Sync Status', status: 'Operational' },
                   { label: 'Last Backup', status: '2h ago' }
                 ]},
@@ -308,24 +353,24 @@ export default function AdminPage() {
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2">
                       <section.icon size={20} />
                     </div>
-                    <CardTitle className="text-base font-heading font-black uppercase tracking-widest">{section.title}</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-tight">{section.desc}</CardDescription>
+                    <CardTitle className="text-sm font-heading font-black uppercase tracking-widest text-foreground">{section.title}</CardTitle>
+                    <CardDescription className="text-[9px] font-bold uppercase tracking-tight">{section.desc}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {section.items.map(item => (
                       <div key={item.label} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                        <span className="text-xs font-medium text-muted-foreground">{item.label}</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">{item.label}</span>
                         {item.action ? (
                           <button onClick={item.action} className={cn('w-8 h-4 rounded-full transition-all relative', item.status === 'Active' ? 'bg-primary' : 'bg-muted')}>
                             <div className={cn('absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all shadow-sm', item.status === 'Active' ? 'translate-x-4.5' : 'translate-x-0.5')} />
                           </button>
                         ) : (
-                          <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{item.status}</span>
+                          <span className="text-[9px] font-black text-foreground uppercase tracking-widest">{item.status}</span>
                         )}
                       </div>
                     ))}
-                    <Button variant="ghost" size="sm" className="w-full mt-2 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white border border-transparent hover:border-primary/20">
-                      Configure Advanced <ChevronRight size={14} className="ml-1" />
+                    <Button variant="ghost" size="sm" className="w-full mt-2 text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white border border-transparent hover:border-primary/20">
+                      View Advanced <ChevronRight size={14} className="ml-1" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -338,7 +383,7 @@ export default function AdminPage() {
       {/* Add User Modal */}
       <AnimatePresence>
         {showUserModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
@@ -347,16 +392,16 @@ export default function AdminPage() {
               onClick={() => setShowUserModal(false)} 
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-background border border-border rounded-3xl shadow-2xl w-full max-w-md p-8 space-y-6 overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: 100 }}
+              className="relative bg-background border-t sm:border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 space-y-6 overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-heading font-black tracking-tight text-foreground">Add New User</h3>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">System Provisioning</p>
+                  <h3 className="text-xl sm:text-2xl font-heading font-black tracking-tight text-foreground">Add New User</h3>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">System Provisioning</p>
                 </div>
                 <button onClick={() => setShowUserModal(false)} className="p-2 hover:bg-muted rounded-xl transition-colors"><X size={20} /></button>
               </div>
@@ -368,15 +413,15 @@ export default function AdminPage() {
                 ].map(f => (
                   <div key={f.label}>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">{f.label}</label>
-                    <input type={f.type} placeholder={f.ph} className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium" />
+                    <input type={f.type} placeholder={f.ph} className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
                   </div>
                 ))}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Role</label>
                     <Select>
-                      <SelectTrigger className="w-full h-11 rounded-2xl">
+                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl">
                         <SelectValue placeholder="Select Role" />
                       </SelectTrigger>
                       <SelectContent>
@@ -387,7 +432,7 @@ export default function AdminPage() {
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Campus</label>
                     <Select>
-                      <SelectTrigger className="w-full h-11 rounded-2xl">
+                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl">
                         <SelectValue placeholder="Select Branch" />
                       </SelectTrigger>
                       <SelectContent>
@@ -398,9 +443,9 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button variant="ghost" onClick={() => setShowUserModal(false)} className="flex-1 rounded-2xl py-6 text-xs font-black uppercase tracking-widest">Cancel</Button>
-                <Button onClick={() => setShowUserModal(false)} className="flex-1 bg-primary text-white rounded-2xl py-6 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary/90">Create Account</Button>
+              <div className="flex gap-3 pt-4 pb-4 sm:pb-0">
+                <Button variant="ghost" onClick={() => setShowUserModal(false)} className="flex-1 h-12 rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest">Cancel</Button>
+                <Button onClick={() => setShowUserModal(false)} className="flex-1 h-12 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90">Create Account</Button>
               </div>
             </motion.div>
           </div>

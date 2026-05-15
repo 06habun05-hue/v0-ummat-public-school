@@ -128,9 +128,9 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
-                <th className="px-6 py-4 text-left font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Student Name</th>
+                <th className="px-4 sm:px-6 py-4 text-left font-bold text-[10px] uppercase tracking-widest text-muted-foreground sticky left-0 bg-muted/50 z-10">Student</th>
                 {viewMode === 'daily' ? (
-                  <th className="px-6 py-4 text-center font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Attendance Status</th>
+                  <th className="px-4 sm:px-6 py-4 text-center font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Status</th>
                 ) : (
                   days.map(day => (
                     <th key={day} className="px-4 py-4 text-center font-bold text-[10px] uppercase tracking-widest text-muted-foreground border-l border-border">{day}</th>
@@ -141,10 +141,15 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
             <tbody className="divide-y divide-border">
               {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-6 py-4 font-semibold text-foreground">{student.name}</td>
+                  <td className="px-4 sm:px-6 py-4 font-semibold text-foreground sticky left-0 bg-background z-10 border-r border-border sm:border-none shadow-[2px_0_5px_rgba(0,0,0,0.05)] sm:shadow-none">
+                    <div className="flex flex-col">
+                      <span className="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{student.name}</span>
+                      <span className="text-[9px] text-muted-foreground uppercase sm:hidden">ID: {student.id}</span>
+                    </div>
+                  </td>
                   {viewMode === 'daily' ? (
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-3">
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex items-center justify-center gap-1.5 sm:gap-3">
                         {(['present', 'late', 'absent'] as const).map(status => {
                           const config = statusConfig[status]
                           const isActive = student.status === status
@@ -153,12 +158,12 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
                               key={status}
                               onClick={() => markStatus(student.id, status)}
                               className={cn(
-                                'flex flex-col items-center gap-1 px-4 py-2 rounded-lg border transition-all min-w-[70px]',
-                                isActive ? `${config.bg} ${config.color} ${config.border} ring-2 ring-primary/20` : `bg-background text-muted-foreground border-border ${config.hover} hover:text-foreground`
+                                'flex flex-col items-center gap-1 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border transition-all min-w-[50px] sm:min-w-[70px]',
+                                isActive ? `${config.bg} ${config.color} ${config.border} ring-2 ring-primary/20 shadow-inner` : `bg-background text-muted-foreground border-border ${config.hover} hover:text-foreground`
                               )}
                             >
-                              <config.icon size={16} />
-                              <span className="text-[10px] font-bold uppercase">{status}</span>
+                              <config.icon size={14} className="sm:w-4 sm:h-4" />
+                              <span className="text-[8px] sm:text-[10px] font-black uppercase">{config.label}</span>
                             </button>
                           )
                         })}
@@ -171,7 +176,7 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
                       return (
                         <td key={day} className="px-4 py-4 text-center border-l border-border">
                           <div className={cn(
-                            'w-8 h-8 mx-auto flex items-center justify-center rounded-md text-[10px] font-black border',
+                            'w-7 h-7 sm:w-8 sm:h-8 mx-auto flex items-center justify-center rounded-md text-[9px] sm:text-[10px] font-black border',
                             config.bg, config.color, config.border
                           )}>
                             {config.label}

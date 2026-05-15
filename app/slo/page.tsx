@@ -44,22 +44,22 @@ export default function SLOPage() {
   )
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">Curriculum Intelligence</h2>
-          <p className="text-sm text-muted-foreground mt-1">Orchestrate learning outcomes and architectural mapping</p>
+          <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">Curriculum Intelligence</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Orchestrate learning outcomes and architectural mapping</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Button onClick={() => setShowModal(true)} className="px-8 py-6 bg-primary text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/20">
+          <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto h-12 px-8 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/20">
             <Plus size={18} className="mr-2" /> Provision SLO
           </Button>
         </motion.div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
         {[
           ['registry', 'SLO Registry'],
           ['map', 'Curriculum Map'],
@@ -68,7 +68,7 @@ export default function SLOPage() {
             key={key} 
             onClick={() => setActiveTab(key as any)} 
             className={cn(
-              'px-8 py-4 text-xs font-black uppercase tracking-widest transition-all border-b-2 -mb-px whitespace-nowrap', 
+              'px-6 sm:px-8 py-4 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all border-b-2 -mb-px whitespace-nowrap', 
               activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
             )}
           >
@@ -87,22 +87,22 @@ export default function SLOPage() {
         >
           {activeTab === 'registry' && (
             <div className="space-y-6">
-              <div className="bg-background/50 backdrop-blur-md border border-border rounded-3xl p-6 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="relative md:col-span-2">
+              <div className="bg-background/50 backdrop-blur-md border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="relative lg:col-span-2">
                     <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <input
                       value={search}
                       onChange={e => setSearch(e.target.value)}
-                      placeholder="Search SLO infrastructure..."
-                      className="w-full pl-12 pr-4 py-3 bg-background border border-border rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="Search infrastructure..."
+                      className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl sm:rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     />
                   </div>
 
                   <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                    <SelectTrigger className="h-12 rounded-2xl border-border bg-background">
+                    <SelectTrigger className="h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                       <div className="flex items-center gap-2">
-                        <Filter size={14} className="text-muted-foreground" />
+                        <Filter size={14} className="text-primary" />
                         <SelectValue placeholder="Subject" />
                       </div>
                     </SelectTrigger>
@@ -112,9 +112,9 @@ export default function SLOPage() {
                   </Select>
 
                   <Select value={chapterFilter} onValueChange={setChapterFilter}>
-                    <SelectTrigger className="h-12 rounded-2xl border-border bg-background">
+                    <SelectTrigger className="h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                       <div className="flex items-center gap-2">
-                        <BookOpen size={14} className="text-muted-foreground" />
+                        <BookOpen size={14} className="text-primary" />
                         <SelectValue placeholder="Chapter" />
                       </div>
                     </SelectTrigger>
@@ -125,7 +125,8 @@ export default function SLOPage() {
                 </div>
               </div>
 
-              <div className="border border-border rounded-3xl overflow-hidden shadow-2xl bg-background">
+              {/* SLO List: Desktop Table */}
+              <div className="hidden lg:block border border-border rounded-3xl overflow-hidden shadow-2xl bg-background">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -136,7 +137,7 @@ export default function SLOPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {filtered.map((slo, i) => (
+                      {filtered.map((slo) => (
                         <tr key={slo.id} className="group hover:bg-primary/[0.02] transition-colors">
                           <td className="px-6 py-5 font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</td>
                           <td className="px-6 py-5">
@@ -163,25 +164,55 @@ export default function SLOPage() {
                   </table>
                 </div>
               </div>
+
+              {/* SLO List: Mobile Cards */}
+              <div className="lg:hidden space-y-4">
+                {filtered.map((slo) => (
+                  <div key={slo.id} className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Active</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm font-bold text-foreground leading-relaxed">{slo.description}</p>
+                    
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Subject</p>
+                        <Badge variant="secondary" className="bg-muted text-foreground border-border text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                          {slo.subject}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">NCP Alignment</p>
+                        <p className="text-[10px] font-mono font-bold text-muted-foreground">{slo.ncp}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {activeTab === 'map' && (
-            <div className="border border-border rounded-3xl overflow-hidden shadow-2xl bg-background relative">
+            <div className="border border-border rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-background relative">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="bg-muted border-b border-border">
-                      <th className="px-6 py-5 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest sticky left-0 bg-muted z-20 border-r border-border">Chapter Archetype</th>
+                      <th className="px-4 sm:px-6 py-5 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest sticky left-0 bg-muted z-20 border-r border-border min-w-[120px]">Archetype</th>
                       {mapSubjects.map(s => (
                         <th key={s} className="px-6 py-5 text-center text-[10px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap min-w-[140px]">{s}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {curriculumMap.map((row, i) => (
+                    {curriculumMap.map((row) => (
                       <tr key={row.chapter} className="hover:bg-primary/[0.02] transition-colors group">
-                        <td className="px-6 py-6 font-black text-xs sticky left-0 bg-background z-10 border-r border-border group-hover:bg-primary/[0.02] transition-colors">{row.chapter}</td>
+                        <td className="px-4 sm:px-6 py-6 font-black text-[10px] sm:text-xs sticky left-0 bg-background z-10 border-r border-border group-hover:bg-primary/[0.02] transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.05)] sm:shadow-none">{row.chapter}</td>
                         {mapSubjects.map(sub => {
                           const val = row[sub as keyof typeof row]
                           return (
@@ -192,8 +223,8 @@ export default function SLOPage() {
                                   animate={{ scale: 1, opacity: 1 }}
                                   className="flex flex-col items-center gap-2 group/node"
                                 >
-                                  <div className="w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/20 ring-4 ring-primary/10 group-hover/node:ring-primary/30 transition-all" />
-                                  <span className="text-[10px] font-black font-mono text-primary bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">{val}</span>
+                                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-primary shadow-lg shadow-primary/20 ring-4 ring-primary/10 group-hover/node:ring-primary/30 transition-all" />
+                                  <span className="text-[9px] sm:text-[10px] font-black font-mono text-primary bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">{val}</span>
                                 </motion.div>
                               ) : (
                                 <div className="w-2 h-2 rounded-full bg-border/40 mx-auto" />
@@ -206,9 +237,9 @@ export default function SLOPage() {
                   </tbody>
                 </table>
               </div>
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary shadow-sm" /> Verified Mapping</span>
-                <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-border/40" /> Vacant Node</span>
+              <div className="px-4 sm:px-6 py-4 border-t border-border bg-muted/30 flex items-center gap-4 sm:gap-6 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary shadow-sm" /> Mapped</span>
+                <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-border/40" /> Vacant</span>
               </div>
             </div>
           )}
@@ -218,7 +249,7 @@ export default function SLOPage() {
       {/* Add SLO Modal */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
@@ -227,43 +258,43 @@ export default function SLOPage() {
               onClick={() => setShowModal(false)} 
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-background border border-border rounded-3xl shadow-2xl w-full max-w-lg p-8 space-y-6 overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: 100 }}
+              className="relative bg-background border-t sm:border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-8 space-y-6 overflow-hidden"
             >
                <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
                <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-heading font-black tracking-tight text-foreground uppercase tracking-widest">Provision SLO</h3>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Curriculum Architectural Node</p>
+                  <h3 className="text-xl sm:text-2xl font-heading font-black tracking-tight text-foreground uppercase tracking-widest">Provision SLO</h3>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Curriculum Architectural Node</p>
                 </div>
                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-muted rounded-xl transition-colors"><X size={20} /></button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-hide">
                 {[
                   ['SLO Code', 'e.g. SLO-009'],
-                  ['Description', 'Describe the specific learning outcome objective...'],
+                  ['Description', 'Learning objective objective...'],
                   ['NCP Alignment', 'e.g. NCP-LIT-03'],
-                  ['NCP Description', 'Provide granular details on curriculum alignment...']
+                  ['NCP Description', 'Granular details on alignment...']
                 ].map(([label, ph]) => (
                   <div key={label}>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">{label}</label>
                     {label.includes('Description') ? (
-                      <textarea rows={label === 'Description' ? 3 : 2} placeholder={ph} className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none shadow-inner" />
+                      <textarea rows={label === 'Description' ? 3 : 2} placeholder={ph} className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none shadow-inner" />
                     ) : (
-                      <input placeholder={ph} className="w-full px-4 py-3 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                      <input placeholder={ph} className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
                     )}
                   </div>
                 ))}
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Domain/Subject</label>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Domain</label>
                     <Select>
-                      <SelectTrigger className="w-full h-11 rounded-2xl">
-                        <SelectValue placeholder="Select Subject" />
+                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner">
+                        <SelectValue placeholder="Subject" />
                       </SelectTrigger>
                       <SelectContent>
                         {curriculumSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -271,10 +302,10 @@ export default function SLOPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Structural Unit</label>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Unit</label>
                     <Select>
-                      <SelectTrigger className="w-full h-11 rounded-2xl">
-                        <SelectValue placeholder="Select Chapter" />
+                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner">
+                        <SelectValue placeholder="Chapter" />
                       </SelectTrigger>
                       <SelectContent>
                         {curriculumChapters.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -284,9 +315,9 @@ export default function SLOPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button variant="ghost" onClick={() => setShowModal(false)} className="flex-1 rounded-2xl py-6 text-xs font-black uppercase tracking-widest">Abort</Button>
-                <Button onClick={() => setShowModal(false)} className="flex-1 bg-primary text-white rounded-2xl py-6 text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90">Commit Node</Button>
+              <div className="flex gap-3 pt-4 pb-4 sm:pb-0">
+                <Button variant="ghost" onClick={() => setShowModal(false)} className="flex-1 h-12 rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest">Abort</Button>
+                <Button onClick={() => setShowModal(false)} className="flex-1 h-12 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90">Commit Node</Button>
               </div>
             </motion.div>
           </div>

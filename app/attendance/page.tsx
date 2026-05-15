@@ -40,24 +40,24 @@ export default function AttendancePage() {
   const subjects = ['English', 'Mathematics', 'Science', 'Social Studies', 'Islamic Studies']
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">
             Attendance Registry
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Real-time synchronization of student presence and academic participation
           </p>
         </motion.div>
         
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="flex bg-muted/50 p-1.5 rounded-2xl border border-border">
+          <div className="flex bg-muted/50 p-1 rounded-xl sm:rounded-2xl border border-border">
             <button
               onClick={() => setViewMode('date')}
               className={cn(
-                'px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                'px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all',
                 viewMode === 'date' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -66,7 +66,7 @@ export default function AttendancePage() {
             <button
               onClick={() => setViewMode('week')}
               className={cn(
-                'px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                'px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all',
                 viewMode === 'week' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -80,13 +80,13 @@ export default function AttendancePage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-background/50 backdrop-blur-md border border-border rounded-3xl p-6 shadow-xl sticky top-20 z-30"
+        className="bg-background/50 backdrop-blur-md border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl sticky top-20 z-30"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Branch */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
-              Campus Location
+              Campus
             </label>
             <Select
               value={filters.branch}
@@ -98,10 +98,10 @@ export default function AttendancePage() {
                 })
               }}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <MapPin size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Branch" />
+                  <SelectValue placeholder="Branch" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -115,16 +115,16 @@ export default function AttendancePage() {
           {/* Class */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
-              Student Group
+              Grade
             </label>
             <Select
               value={filters.class}
               onValueChange={(val) => setFilters({ ...filters, class: val })}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <Filter size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Class" />
+                  <SelectValue placeholder="Class" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -138,16 +138,16 @@ export default function AttendancePage() {
           {/* Subject */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
-              Academic Domain
+              Subject
             </label>
             <Select
               value={filters.subject}
               onValueChange={(val) => setFilters({ ...filters, subject: val })}
             >
-              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+              <SelectTrigger className="h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
                 <div className="flex items-center gap-2">
                   <BookOpen size={14} className="text-primary" />
-                  <SelectValue placeholder="Select Subject" />
+                  <SelectValue placeholder="Subject" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -161,19 +161,19 @@ export default function AttendancePage() {
           {/* Date Picker */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
-              Audit Date
+              Date
             </label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full h-12 rounded-2xl border-border bg-background text-left font-medium shadow-inner",
+                    "w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl border-border bg-background text-left font-medium shadow-inner",
                     !filters.date && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                  {filters.date ? format(filters.date, "PPP") : <span>Pick a date</span>}
+                  <span className="truncate">{filters.date ? format(filters.date, "PPP") : <span>Pick a date</span>}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden border-border shadow-2xl" align="start">
@@ -190,12 +190,12 @@ export default function AttendancePage() {
         </div>
 
         {/* Info Message */}
-        <div className="mt-6 flex items-center justify-between py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
+        <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-            Currently Auditing: <span className="text-primary font-black ml-1">{filters.branch}</span> • <span className="text-primary font-black">{filters.class}</span> • <span className="text-primary font-black">{filters.subject}</span>
+            Audit: <span className="text-primary font-black ml-1">{filters.class}</span> • <span className="text-primary font-black">{filters.subject}</span>
           </p>
           <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest">
-            Live Sync <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Syncing <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           </div>
         </div>
       </motion.div>

@@ -21,6 +21,7 @@ import {
 import { useState } from 'react'
 import { useUIStore, UserRole } from '@/lib/store/ui-store'
 import { useApprovalStore } from '@/lib/store/approval-store'
+import Image from 'next/image'
 
 const ALL_NAV_GROUPS = {
   CORE: {
@@ -59,49 +60,21 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   TEACHER: ['CORE', 'ACADEMIC'],
 }
 
-import Image from 'next/image'
+interface SidebarContentProps {
+  collapsed?: boolean
+  onItemClick?: () => void
+}
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+export function SidebarContent({ collapsed = false, onItemClick }: SidebarContentProps) {
   const pathname = usePathname()
-  const { role } = useUIStore()
+  const { role, logout } = useUIStore()
   const pendingCount = useApprovalStore((s) => s.pending.length)
 
   const allowedGroups = ROLE_PERMISSIONS[role]
   const navGroups = allowedGroups.map(key => ALL_NAV_GROUPS[key as keyof typeof ALL_NAV_GROUPS])
 
   return (
-    <aside
-      className={cn(
-        'flex flex-col bg-secondary text-secondary-foreground border-r border-white/5 transition-all duration-300 flex-shrink-0',
-        collapsed ? 'w-16' : 'w-64'
-      )}
-    >
-      {/* Logo */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
-        {!collapsed && (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/10 overflow-hidden">
-              <Image src="/logo.jpg" alt="Ummat Logo" width={32} height={32} className="object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-heading font-black text-sm text-white tracking-tight leading-none">Ummat</span>
-              <span className="text-[9px] font-bold text-white/50 uppercase tracking-tighter mt-1">Systems</span>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 hover:bg-white/5 rounded-md transition-colors ml-auto text-white/70 hover:text-white"
-          aria-label="Toggle sidebar"
-        >
-          <ChevronLeft
-            size={16}
-            className={cn('transition-transform', collapsed ? 'rotate-180' : '')}
-          />
-        </button>
-      </div>
-
+    <div className="flex flex-col h-full">
       {/* Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto scrollbar-hide">
         {navGroups.map((group) => (
@@ -120,6 +93,7 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={onItemClick}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm group relative',
                       isActive
@@ -164,6 +138,7 @@ export function Sidebar() {
       {/* Logout */}
       <div className="border-t border-white/5 p-3">
         <button
+          onClick={() => { logout(); onItemClick?.() }}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full transition-all text-white/50 hover:text-white hover:bg-white/5 text-sm font-medium"
           title={collapsed ? 'Logout' : undefined}
         >
@@ -171,6 +146,46 @@ export function Sidebar() {
           {!collapsed && <span>Sign Out</span>}
         </button>
       </div>
+    </div>
+  )
+}
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false)
+
+  return (
+    <aside
+      className={cn(
+        'hidden lg:flex flex-col bg-secondary text-secondary-foreground border-r border-white/5 transition-all duration-300 flex-shrink-0',
+        collapsed ? 'w-16' : 'w-64'
+      )}
+    >
+      {/* Logo */}
+      <div className="flex items-center justify-between px-5 py-5 border-b border-white/5">
+        {!collapsed && (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg border border-white/10 overflow-hidden">
+              <Image src="/logo.jpg" alt="Ummat Logo" width={32} height={32} className="object-contain" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-heading font-black text-sm text-white tracking-tight leading-none">Ummat</span>
+              <span className="text-[9px] font-bold text-white/50 uppercase tracking-tighter mt-1">Systems</span>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-1.5 hover:bg-white/5 rounded-md transition-colors ml-auto text-white/70 hover:text-white"
+          aria-label="Toggle sidebar"
+        >
+          <ChevronLeft
+            size={16}
+            className={cn('transition-transform', collapsed ? 'rotate-180' : '')}
+          />
+        </button>
+      </div>
+
+      <SidebarContent collapsed={collapsed} />
     </aside>
   )
 }
