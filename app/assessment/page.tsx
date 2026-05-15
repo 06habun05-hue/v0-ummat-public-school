@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { AssessmentTable } from '@/components/assessment/assessment-table'
-import { ChevronDown } from 'lucide-react'
+import { getSLOsByChapter, subjects, chapters } from '@/lib/data/curriculum'
 
 export default function AssessmentPage() {
   const [filters, setFilters] = useState({
@@ -10,7 +10,6 @@ export default function AssessmentPage() {
     class: '10-A',
     subject: 'English',
     chapter: 'Chapter 1',
-    slo: 'SLO-001',
   })
 
   const branches = ['Main Campus', 'North Campus', 'South Campus']
@@ -19,9 +18,10 @@ export default function AssessmentPage() {
     'North Campus': ['10-A', '10-B', '7-A', '7-B'],
     'South Campus': ['10-A', '9-A', '8-A', '8-B'],
   }
-  const subjects = ['English', 'Mathematics', 'Science', 'Social Studies', 'Islamic Studies']
-  const chapters = ['Chapter 1', 'Chapter 2', 'Chapter 3', 'Chapter 4']
-  const slos = ['SLO-001', 'SLO-002', 'SLO-003', 'SLO-004']
+
+  const activeSLOs = useMemo(() => {
+    return getSLOsByChapter(filters.subject, filters.chapter)
+  }, [filters.subject, filters.chapter])
 
   return (
     <div className="p-6 md:p-8 space-y-8">
@@ -37,7 +37,7 @@ export default function AssessmentPage() {
 
       {/* Filter Bar */}
       <div className="bg-background border border-border rounded-lg p-6 sticky top-20 z-30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Branch */}
           <div>
             <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
@@ -52,7 +52,7 @@ export default function AssessmentPage() {
                   class: classes[e.target.value]?.[0] || '',
                 })
               }}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
+              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {branches.map((b) => (
                 <option key={b} value={b}>
@@ -70,7 +70,7 @@ export default function AssessmentPage() {
             <select
               value={filters.class}
               onChange={(e) => setFilters({ ...filters, class: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
+              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {(classes[filters.branch] || []).map((c) => (
                 <option key={c} value={c}>
@@ -88,7 +88,7 @@ export default function AssessmentPage() {
             <select
               value={filters.subject}
               onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
+              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {subjects.map((s) => (
                 <option key={s} value={s}>
@@ -106,7 +106,7 @@ export default function AssessmentPage() {
             <select
               value={filters.chapter}
               onChange={(e) => setFilters({ ...filters, chapter: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
+              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {chapters.map((c) => (
                 <option key={c} value={c}>
@@ -115,34 +115,16 @@ export default function AssessmentPage() {
               ))}
             </select>
           </div>
-
-          {/* SLO */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              SLO
-            </label>
-            <select
-              value={filters.slo}
-              onChange={(e) => setFilters({ ...filters, slo: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
-            >
-              {slos.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 
       {/* Assessment Table */}
-      <AssessmentTable />
+      <AssessmentTable slos={activeSLOs} />
 
       {/* Info Box */}
       <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
         <p className="text-sm text-foreground">
-          <strong>Tip:</strong> Double-click any cell to edit the grade. Use grades 1-4 scale. Required fields are highlighted in yellow.
+          <strong>Pro Tip:</strong> Select a cell and use your keyboard (1-4) for rapid entry. You can also paste multiple cells directly from Excel or Google Sheets.
         </p>
       </div>
     </div>

@@ -11,19 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const mockSLOs = [
-  { id: 'SLO-001', description: 'Students can identify main ideas in a passage', subject: 'English', chapter: 'Chapter 1', ncp: 'NCP-LIT-01', status: 'Active' },
-  { id: 'SLO-002', description: 'Students can solve quadratic equations', subject: 'Mathematics', chapter: 'Chapter 3', ncp: 'NCP-MATH-02', status: 'Active' },
-  { id: 'SLO-003', description: 'Students understand cell structure and function', subject: 'Science', chapter: 'Chapter 2', ncp: 'NCP-SCI-01', status: 'Active' },
-  { id: 'SLO-004', description: 'Students can recite and explain Surah Al-Baqarah verses', subject: 'Islamic Studies', chapter: 'Chapter 1', ncp: 'NCP-ISL-01', status: 'Active' },
-  { id: 'SLO-005', description: 'Students demonstrate speaking fluency in conversation', subject: 'English', chapter: 'Chapter 2', ncp: 'NCP-LIT-02', status: 'Draft' },
-  { id: 'SLO-006', description: 'Students apply Pythagoras theorem to real problems', subject: 'Mathematics', chapter: 'Chapter 4', ncp: 'NCP-MATH-03', status: 'Active' },
-  { id: 'SLO-007', description: 'Students describe photosynthesis process', subject: 'Science', chapter: 'Chapter 3', ncp: 'NCP-SCI-02', status: 'Draft' },
-  { id: 'SLO-008', description: 'Students analyze Pakistan movement causes', subject: 'Social Studies', chapter: 'Chapter 1', ncp: 'NCP-SOC-01', status: 'Active' },
-]
+import { mockSLOs, subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
 
-const subjects = ['All', 'English', 'Mathematics', 'Science', 'Islamic Studies', 'Social Studies']
-const chapters = ['All', 'Chapter 1', 'Chapter 2', 'Chapter 3', 'Chapter 4']
+const subjects = ['All', ...curriculumSubjects]
+const chapters = ['All', ...curriculumChapters]
 
 // Curriculum Map data: chapters x subjects, which SLOs are mapped
 const curriculumMap = [
@@ -32,7 +23,7 @@ const curriculumMap = [
   { chapter: 'Chapter 3', English: null, Mathematics: 'SLO-002', Science: 'SLO-007', 'Islamic Studies': null, 'Social Studies': null },
   { chapter: 'Chapter 4', English: null, Mathematics: 'SLO-006', Science: null, 'Islamic Studies': null, 'Social Studies': null },
 ]
-const mapSubjects = ['English', 'Mathematics', 'Science', 'Islamic Studies', 'Social Studies']
+const mapSubjects = curriculumSubjects
 
 export default function SLOPage() {
   const [activeTab, setActiveTab] = useState<'registry' | 'map'>('registry')
