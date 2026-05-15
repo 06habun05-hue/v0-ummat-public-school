@@ -2,7 +2,21 @@
 
 import { useState, useMemo } from 'react'
 import { AssessmentTable } from '@/components/assessment/assessment-table'
-import { getSLOsByChapter, subjects, chapters } from '@/lib/data/curriculum'
+import { getSLOsByChapter, subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
+import { 
+  Trophy, BookOpen, Filter, MapPin, 
+  ChevronRight, Sparkles, LayoutGrid, List
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 
 export default function AssessmentPage() {
   const [filters, setFilters] = useState({
@@ -24,109 +38,180 @@ export default function AssessmentPage() {
   }, [filters.subject, filters.chapter])
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
+    <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">
-          Assessment Matrix
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Evaluate and grade student performance across learning outcomes
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
+            Assessment Matrix
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Orchestrate grading, SLO mastery, and academic performance metrics
+          </p>
+        </motion.div>
+        
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl border-border bg-background hover:bg-primary hover:text-white transition-all text-xs font-black uppercase tracking-widest shadow-sm">
+            Export Analytics
+          </Button>
+          <Button className="h-12 px-8 rounded-2xl bg-primary text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">
+            Commit Grades
+          </Button>
+        </motion.div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-background border border-border rounded-lg p-6 sticky top-20 z-30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Control Bar */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-background/50 backdrop-blur-md border border-border rounded-3xl p-6 shadow-xl sticky top-20 z-30"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Branch */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              Branch
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
+              Campus
             </label>
-            <select
+            <Select
               value={filters.branch}
-              onChange={(e) => {
+              onValueChange={(val) => {
                 setFilters({
                   ...filters,
-                  branch: e.target.value,
-                  class: classes[e.target.value]?.[0] || '',
+                  branch: val,
+                  class: classes[val]?.[0] || '',
                 })
               }}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              {branches.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Branch" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {branches.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Class */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              Class
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
+              Grade Level
             </label>
-            <select
+            <Select
               value={filters.class}
-              onChange={(e) => setFilters({ ...filters, class: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              onValueChange={(val) => setFilters({ ...filters, class: val })}
             >
-              {(classes[filters.branch] || []).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <Filter size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Class" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {(classes[filters.branch] || []).map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Subject */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
               Subject
             </label>
-            <select
+            <Select
               value={filters.subject}
-              onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              onValueChange={(val) => setFilters({ ...filters, subject: val })}
             >
-              {subjects.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Subject" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {curriculumSubjects.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Chapter */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
               Chapter
             </label>
-            <select
+            <Select
               value={filters.chapter}
-              onChange={(e) => setFilters({ ...filters, chapter: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              onValueChange={(val) => setFilters({ ...filters, chapter: val })}
             >
-              {chapters.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <LayoutGrid size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Chapter" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {curriculumChapters.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      </div>
 
-      {/* Assessment Table */}
-      <AssessmentTable slos={activeSLOs} />
+        {/* Dynamic Context Bar */}
+        <div className="mt-6 flex items-center justify-between py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+               <div className="w-2 h-2 rounded-full bg-emerald-500" />
+               <span className="text-[10px] font-black text-foreground uppercase tracking-widest">Matrix Unlocked</span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              Context: <span className="text-primary">{filters.branch}</span> <ChevronRight size={10} className="inline mx-1" /> <span className="text-primary">{filters.class}</span> <ChevronRight size={10} className="inline mx-1" /> <span className="text-primary">{filters.subject}</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Sparkles size={14} className="text-amber-500 animate-pulse" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Auto-Saving Enabled</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Assessment Matrix Table */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="relative z-10"
+      >
+        <AssessmentTable slos={activeSLOs} />
+      </motion.div>
 
       {/* Info Box */}
-      <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-        <p className="text-sm text-foreground">
-          <strong>Pro Tip:</strong> Select a cell and use your keyboard (1-4) for rapid entry. You can also paste multiple cells directly from Excel or Google Sheets.
-        </p>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="bg-primary/5 border border-primary/20 rounded-3xl p-6"
+      >
+        <div className="flex items-center gap-3">
+           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <Sparkles size={20} />
+           </div>
+           <div>
+              <p className="text-sm font-black text-foreground uppercase tracking-wider">Productivity Protocol</p>
+              <p className="text-xs text-muted-foreground font-medium">Select a cell and use your keyboard (1-4) for rapid entry. Bulk pasting from external spreadsheets is supported.</p>
+           </div>
+        </div>
+      </motion.div>
     </div>
   )
 }

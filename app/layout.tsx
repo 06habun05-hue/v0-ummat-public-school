@@ -41,6 +41,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { PageTransition } from '@/components/layout/page-transition'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -53,7 +55,9 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased text-foreground overflow-hidden scrollbar-hide">
         <Shell>
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </Shell>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

@@ -2,14 +2,31 @@
 
 import { useState } from 'react'
 import { AttendancePanel } from '@/components/attendance/attendance-panel'
-import { Calendar } from 'lucide-react'
+import { Calendar as CalendarIcon, Filter, MapPin, BookOpen, ChevronRight } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { Button } from '@/components/ui/button'
+import { format } from 'date-fns'
 
 export default function AttendancePage() {
   const [filters, setFilters] = useState({
     branch: 'Main Campus',
     class: '10-A',
     subject: 'English',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(),
   })
 
   const [viewMode, setViewMode] = useState<'date' | 'week'>('date')
@@ -23,129 +40,174 @@ export default function AttendancePage() {
   const subjects = ['English', 'Mathematics', 'Science', 'Social Studies', 'Islamic Studies']
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
+    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">
-          Attendance Management
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Mark and track student attendance for classes
-        </p>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="bg-background border border-border rounded-lg p-6 sticky top-20 z-30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-          {/* Branch */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              Branch
-            </label>
-            <select
-              value={filters.branch}
-              onChange={(e) => {
-                setFilters({
-                  ...filters,
-                  branch: e.target.value,
-                  class: classes[e.target.value]?.[0] || '',
-                })
-              }}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
-            >
-              {branches.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Class */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              Class
-            </label>
-            <select
-              value={filters.class}
-              onChange={(e) => setFilters({ ...filters, class: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
-            >
-              {(classes[filters.branch] || []).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Subject */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              Subject
-            </label>
-            <select
-              value={filters.subject}
-              onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
-              className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
-            >
-              {subjects.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-2 uppercase">
-              Date
-            </label>
-            <div className="relative">
-              <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={filters.date}
-                onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-                className="w-full pl-9 pr-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm"
-              />
-            </div>
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
+            Attendance Registry
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Real-time synchronization of student presence and academic participation
+          </p>
+        </motion.div>
+        
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+          <div className="flex bg-muted/50 p-1.5 rounded-2xl border border-border">
             <button
               onClick={() => setViewMode('date')}
-              className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                viewMode === 'date'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'border border-border hover:bg-muted'
-              }`}
+              className={cn(
+                'px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                viewMode === 'date' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              Today
+              Daily Audit
             </button>
             <button
               onClick={() => setViewMode('week')}
-              className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                viewMode === 'week'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'border border-border hover:bg-muted'
-              }`}
+              className={cn(
+                'px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                viewMode === 'week' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              Week
+              Weekly Overview
             </button>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Filter Bar */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-background/50 backdrop-blur-md border border-border rounded-3xl p-6 shadow-xl sticky top-20 z-30"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Branch */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
+              Campus Location
+            </label>
+            <Select
+              value={filters.branch}
+              onValueChange={(val) => {
+                setFilters({
+                  ...filters,
+                  branch: val,
+                  class: classes[val]?.[0] || '',
+                })
+              }}
+            >
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Branch" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {branches.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Class */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
+              Student Group
+            </label>
+            <Select
+              value={filters.class}
+              onValueChange={(val) => setFilters({ ...filters, class: val })}
+            >
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <Filter size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Class" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {(classes[filters.branch] || []).map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Subject */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
+              Academic Domain
+            </label>
+            <Select
+              value={filters.subject}
+              onValueChange={(val) => setFilters({ ...filters, subject: val })}
+            >
+              <SelectTrigger className="h-12 rounded-2xl border-border bg-background shadow-inner">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={14} className="text-primary" />
+                  <SelectValue placeholder="Select Subject" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date Picker */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black text-muted-foreground mb-1 ml-1 uppercase tracking-widest">
+              Audit Date
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full h-12 rounded-2xl border-border bg-background text-left font-medium shadow-inner",
+                    !filters.date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                  {filters.date ? format(filters.date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden border-border shadow-2xl" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filters.date}
+                  onSelect={(date) => date && setFilters({ ...filters, date })}
+                  initialFocus
+                  className="p-3"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
         {/* Info Message */}
-        <p className="text-xs text-muted-foreground">
-          Filtering by <span className="font-semibold">{filters.branch}</span> • <span className="font-semibold">{filters.class}</span> • <span className="font-semibold">{filters.subject}</span>
-        </p>
-      </div>
+        <div className="mt-6 flex items-center justify-between py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            Currently Auditing: <span className="text-primary font-black ml-1">{filters.branch}</span> • <span className="text-primary font-black">{filters.class}</span> • <span className="text-primary font-black">{filters.subject}</span>
+          </p>
+          <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest">
+            Live Sync <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          </div>
+        </div>
+      </motion.div>
 
       {/* Attendance Panel */}
-      <AttendancePanel />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <AttendancePanel />
+      </motion.div>
     </div>
   )
 }
