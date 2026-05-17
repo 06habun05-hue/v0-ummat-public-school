@@ -23,10 +23,10 @@ const chapters = ['All', ...curriculumChapters]
 
 // Curriculum Map data: chapters x subjects, which SLOs are mapped
 const curriculumMap = [
-  { chapter: 'Chapter 1', English: 'SLO-001', Mathematics: null, Science: null, 'Islamic Studies': 'SLO-004', 'Social Studies': 'SLO-008' },
-  { chapter: 'Chapter 2', English: 'SLO-005', Mathematics: null, Science: 'SLO-003', 'Islamic Studies': null, 'Social Studies': null },
-  { chapter: 'Chapter 3', English: null, Mathematics: 'SLO-002', Science: 'SLO-007', 'Islamic Studies': null, 'Social Studies': null },
-  { chapter: 'Chapter 4', English: null, Mathematics: 'SLO-006', Science: null, 'Islamic Studies': null, 'Social Studies': null },
+  { chapter: 'Chapter 1', English: 'SLO-001', Mathematics: 'SLO-019', Science: 'SLO-052', 'Islamic Studies': 'SLO-087', 'Social Studies': 'SLO-095' },
+  { chapter: 'Chapter 2', English: 'SLO-013', Mathematics: 'SLO-034', Science: 'SLO-072', 'Islamic Studies': null, 'Social Studies': null },
+  { chapter: 'Chapter 3', English: null, Mathematics: 'SLO-042', Science: 'SLO-082', 'Islamic Studies': null, 'Social Studies': null },
+  { chapter: 'Chapter 4', English: null, Mathematics: 'SLO-047', Science: null, 'Islamic Studies': null, 'Social Studies': null },
 ]
 const mapSubjects = curriculumSubjects
 
@@ -273,28 +273,17 @@ export default function SLOPage() {
               </div>
 
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-hide">
-                {[
-                  ['SLO Code', 'e.g. SLO-009'],
-                  ['Description', 'Learning objective objective...'],
-                  ['NCP Alignment', 'e.g. NCP-LIT-03'],
-                  ['NCP Description', 'Granular details on alignment...']
-                ].map(([label, ph]) => (
-                  <div key={label}>
-                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">{label}</label>
-                    {label.includes('Description') ? (
-                      <textarea rows={label === 'Description' ? 3 : 2} placeholder={ph} className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none shadow-inner" />
-                    ) : (
-                      <input placeholder={ph} className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
-                    )}
-                  </div>
-                ))}
-                
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">SLO Code</label>
+                  <input placeholder="e.g. SLO-105" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Domain</label>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Subject</label>
                     <Select>
-                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner">
-                        <SelectValue placeholder="Subject" />
+                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner bg-background border-border text-sm font-medium">
+                        <SelectValue placeholder="Select Subject" />
                       </SelectTrigger>
                       <SelectContent>
                         {curriculumSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -302,15 +291,24 @@ export default function SLOPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Unit</label>
-                    <Select>
-                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner">
-                        <SelectValue placeholder="Chapter" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {curriculumChapters.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Chapter Name</label>
+                    <input placeholder="e.g. Chapter 1: Poetry" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">SLO Description</label>
+                  <textarea rows={3} placeholder="Describe the outcome to be learned by students..." className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none shadow-inner" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">NCP Alignment Code</label>
+                    <input placeholder="e.g. NCP-ENG-105" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">NCP Alignment Description</label>
+                    <input placeholder="e.g. Grade 10 Language alignment" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
                   </div>
                 </div>
               </div>

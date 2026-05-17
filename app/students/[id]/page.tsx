@@ -33,10 +33,10 @@ const studentData = {
   },
   
   sloProgress: [
-    { name: 'SLO-001: Main Idea', mastery: 85, ncp: 'NCP-LIT-01', status: 'Mastered' },
-    { name: 'SLO-002: Math Logic', mastery: 78, ncp: 'NCP-MATH-02', status: 'Proficient' },
-    { name: 'SLO-003: Cell Biology', mastery: 92, ncp: 'NCP-SCI-01', status: 'Mastered' },
-    { name: 'SLO-004: Islamic Ethics', mastery: 88, ncp: 'NCP-ISL-01', status: 'Mastered' },
+    { name: 'SLO-001: Main Idea', mastery: 85, ncp: 'NCP-ENG-101', status: 'Mastered' },
+    { name: 'SLO-042: Quadratic Roots', mastery: 78, ncp: 'NCP-MAT-301', status: 'Proficient' },
+    { name: 'SLO-072: Cellular Organelles', mastery: 92, ncp: 'NCP-SCI-201', status: 'Mastered' },
+    { name: 'SLO-087: Surah Al-Baqarah', mastery: 88, ncp: 'NCP-ISL-101', status: 'Mastered' },
   ],
   
   behavioralTrend: {
