@@ -91,7 +91,7 @@ export default function SLOPage() {
     setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', description: '', ncp: '', ncpDesc: '' })
   }
 
-  // TSV spreadsheet copy-paste parser
+  // Smart Multi-Delimiter spreadsheet copy-paste parser
   const handleParseBulk = (text: string) => {
     if (!text.trim()) {
       setParsedSLOs([])
@@ -101,16 +101,27 @@ export default function SLOPage() {
     const rows: SLO[] = []
     lines.forEach((line) => {
       if (!line.trim()) return
-      const cols = line.split('\t')
-      // Expected columns: Code, Description, Subject, Chapter Name, NCP Alignment
+      
+      // Delimiter detection: split by tabs, consecutive spaces (2 or more spaces), or commas
+      let cols: string[] = []
+      if (line.includes('\t')) {
+        cols = line.split('\t')
+      } else if (/\s{2,}/.test(line)) {
+        cols = line.split(/\s{2,}/)
+      } else if (line.includes(',')) {
+        cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      } else {
+        cols = [line]
+      }
+      
       if (cols[0] || cols[1]) {
         const idVal = cols[0]?.trim() || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
         rows.push({
-          id: idVal.toUpperCase(),
-          description: cols[1]?.trim() || 'Imported learn objective description',
-          subject: cols[2]?.trim() || 'English',
-          chapter: cols[3]?.trim() || 'Chapter 1',
-          ncp: cols[4]?.trim() || 'NCP-GENERIC'
+          id: idVal.toUpperCase().replace(/^"|"$/g, ''),
+          description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported learn objective description',
+          subject: cols[2]?.trim().replace(/^"|"$/g, '') || 'English',
+          chapter: cols[3]?.trim().replace(/^"|"$/g, '') || 'Chapter 1',
+          ncp: cols[4]?.trim().replace(/^"|"$/g, '') || 'NCP-GENERIC'
         })
       }
     })
