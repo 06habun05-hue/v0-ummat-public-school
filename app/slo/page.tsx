@@ -15,8 +15,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-import { mockSLOs, subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
-import { AssessmentLog } from '@/components/slo/assessment-log'
+import { mockSLOs, subjects as curriculumSubjects, chapters as curriculumChapters, SLO } from '@/lib/data/curriculum'
+import { toast } from 'sonner'
 
 const subjects = ['All', ...curriculumSubjects]
 const chapters = ['All', ...curriculumChapters]
@@ -35,13 +35,184 @@ export default function SLOPage() {
   const [search, setSearch] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [chapterFilter, setChapterFilter] = useState('All')
+  
+  // Dynamic State integration
+  const [sloList, setSloList] = useState<SLO[]>(mockSLOs)
+  
+  // Modal states
   const [showModal, setShowModal] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  
+  // Single SLO form state
+  const [singleSlo, setSingleSlo] = useState({
+    id: '',
+    subject: 'English',
+    chapter: 'Chapter 1',
+    description: '',
+    ncp: '',
+    ncpDesc: ''
+  })
+  
+  // Bulk import states
+  const [bulkText, setBulkText] = useState('')
+  const [parsedSLOs, setParsedSLOs] = useState<SLO[]>([])
 
-  const filtered = mockSLOs.filter(s =>
+  const filtered = sloList.filter(s =>
     (search === '' || s.id.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase())) &&
     (subjectFilter === 'All' || s.subject === subjectFilter) &&
     (chapterFilter === 'All' || s.chapter === chapterFilter)
   )
+
+  // Single SLO commit handler
+  const handleCommitSingle = () => {
+    if (!singleSlo.id.trim() || !singleSlo.description.trim()) {
+      toast.error('Outcome Code and Description are required!')
+      return
+    }
+    const newId = singleSlo.id.trim().toUpperCase()
+    
+    // Duplicate check
+    if (sloList.some(s => s.id === newId)) {
+      toast.error(`SLO Code ${newId} already exists in the curriculum database!`)
+      return
+    }
+
+    const newEntry: SLO = {
+      id: newId,
+      description: singleSlo.description.trim(),
+      subject: singleSlo.subject,
+      chapter: singleSlo.chapter,
+      ncp: singleSlo.ncp.trim() || 'NCP-GENERIC'
+    }
+    
+    setSloList([newEntry, ...sloList])
+    toast.success(`Successfully provisioned node ${newEntry.id}!`)
+    setShowModal(false)
+    setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', description: '', ncp: '', ncpDesc: '' })
+  }
+
+  // TSV spreadsheet copy-paste parser
+  const handleParseBulk = (text: string) => {
+    if (!text.trim()) {
+      setParsedSLOs([])
+      return
+    }
+    const lines = text.split(/\r?\n/)
+    const rows: SLO[] = []
+    lines.forEach((line) => {
+      if (!line.trim()) return
+      const cols = line.split('\t')
+      // Expected columns: Code, Description, Subject, Chapter Name, NCP Alignment
+      if (cols[0] || cols[1]) {
+        const idVal = cols[0]?.trim() || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+        rows.push({
+          id: idVal.toUpperCase(),
+          description: cols[1]?.trim() || 'Imported learn objective description',
+          subject: cols[2]?.trim() || 'English',
+          chapter: cols[3]?.trim() || 'Chapter 1',
+          ncp: cols[4]?.trim() || 'NCP-GENERIC'
+        })
+      }
+    })
+    setParsedSLOs(rows)
+  }
+
+  // Drag and drop CSV handlers
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files?.[0]
+    if (file) parseFile(file)
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) parseFile(file)
+  }
+
+  const parseFile = (file: File) => {
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please upload a standard .csv spreadsheet file!')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target?.result as string
+      const lines = text.split(/\r?\n/)
+      const rows: SLO[] = []
+      lines.forEach((line, index) => {
+        if (index === 0 && (line.toLowerCase().includes('code') || line.toLowerCase().includes('description'))) {
+          return // Skip header
+        }
+        if (!line.trim()) return
+        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+        if (cols[0] || cols[1]) {
+          const idVal = cols[0]?.trim().replace(/^"|"$/g, '') || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+          rows.push({
+            id: idVal.toUpperCase(),
+            description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported curriculum outcomes',
+            subject: cols[2]?.trim().replace(/^"|"$/g, '') || 'English',
+            chapter: cols[3]?.trim().replace(/^"|"$/g, '') || 'Chapter 1',
+            ncp: cols[4]?.trim().replace(/^"|"$/g, '') || 'NCP-GENERIC'
+          })
+        }
+      })
+      setParsedSLOs(rows)
+      toast.success(`Successfully parsed ${rows.length} rows from CSV!`)
+    }
+    reader.readAsText(file)
+  }
+
+  // Commit imported rows to active database
+  const handleCommitBulk = () => {
+    if (parsedSLOs.length === 0) {
+      toast.error('No rows found. Paste Excel data or drop a CSV file first!')
+      return
+    }
+    
+    // Filter duplicates
+    const finalRows: SLO[] = []
+    parsedSLOs.forEach(row => {
+      if (sloList.some(s => s.id === row.id) || finalRows.some(s => s.id === row.id)) {
+        // Resolve duplicate code on import
+        row.id = `${row.id}-NEW`
+      }
+      finalRows.push(row)
+    })
+
+    setSloList([...finalRows, ...sloList])
+    toast.success(`Successfully imported and committed ${finalRows.length} SLO records!`)
+    setShowBulkModal(false)
+    setBulkText('')
+    setParsedSLOs([])
+  }
+
+  // Functional CSV exporter
+  const handleExportCSV = () => {
+    if (filtered.length === 0) {
+      toast.error('No curriculum entries match the active filters to export!')
+      return
+    }
+    const headers = ['Outcome Code', 'Description', 'Subject', 'Curriculum Unit', 'NCP Alignment', 'Status']
+    const csvRows = filtered.map(slo => [
+      slo.id,
+      `"${slo.description.replace(/"/g, '""')}"`,
+      slo.subject,
+      slo.chapter,
+      slo.ncp,
+      'Active'
+    ])
+    const csvContent = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `SLO_Curriculum_${subjectFilter}_${chapterFilter}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success(`Curriculum CSV file downloaded successfully!`)
+  }
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
@@ -51,9 +222,15 @@ export default function SLOPage() {
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">Curriculum Intelligence</h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">Orchestrate learning outcomes and architectural mapping</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto h-12 px-8 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/20">
-            <Plus size={18} className="mr-2" /> Provision SLO
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2.5 w-full sm:w-auto">
+          <Button onClick={() => setShowBulkModal(true)} variant="outline" className="flex-1 sm:flex-none h-12 px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-muted text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm">
+            <Globe size={16} className="mr-2 text-primary" /> Bulk Import
+          </Button>
+          <Button onClick={handleExportCSV} variant="outline" className="flex-1 sm:flex-none h-12 px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-muted text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm">
+            Export CSV
+          </Button>
+          <Button onClick={() => setShowModal(true)} className="flex-1 sm:flex-none h-12 px-6 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl shadow-primary/20">
+            <Plus size={18} className="mr-2" /> Add SLO
           </Button>
         </motion.div>
       </div>
@@ -170,11 +347,11 @@ export default function SLOPage() {
                 {filtered.map((slo) => (
                   <div key={slo.id} className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</span>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Active</span>
-                      </div>
+                       <span className="font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</span>
+                       <div className="flex items-center gap-1.5">
+                         <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                         <span className="text-[9px] font-black uppercase tracking-widest text-primary">Active</span>
+                       </div>
                     </div>
                     
                     <p className="text-sm font-bold text-foreground leading-relaxed">{slo.description}</p>
@@ -275,13 +452,18 @@ export default function SLOPage() {
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-hide">
                 <div>
                   <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">SLO Code</label>
-                  <input placeholder="e.g. SLO-105" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                  <input 
+                    value={singleSlo.id}
+                    onChange={e => setSingleSlo({...singleSlo, id: e.target.value})}
+                    placeholder="e.g. SLO-105" 
+                    className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" 
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Subject</label>
-                    <Select>
+                    <Select value={singleSlo.subject} onValueChange={val => setSingleSlo({...singleSlo, subject: val})}>
                       <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner bg-background border-border text-sm font-medium">
                         <SelectValue placeholder="Select Subject" />
                       </SelectTrigger>
@@ -292,30 +474,183 @@ export default function SLOPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Chapter Name</label>
-                    <input placeholder="e.g. Chapter 1: Poetry" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                    <input 
+                      value={singleSlo.chapter}
+                      onChange={e => setSingleSlo({...singleSlo, chapter: e.target.value})}
+                      placeholder="e.g. Chapter 1: Poetry" 
+                      className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" 
+                    />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">SLO Description</label>
-                  <textarea rows={3} placeholder="Describe the outcome to be learned by students..." className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none shadow-inner" />
+                  <textarea 
+                    value={singleSlo.description}
+                    onChange={e => setSingleSlo({...singleSlo, description: e.target.value})}
+                    rows={3} 
+                    placeholder="Describe the outcome to be learned by students..." 
+                    className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-none shadow-inner" 
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">NCP Alignment Code</label>
-                    <input placeholder="e.g. NCP-ENG-105" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                    <input 
+                      value={singleSlo.ncp}
+                      onChange={e => setSingleSlo({...singleSlo, ncp: e.target.value})}
+                      placeholder="e.g. NCP-ENG-105" 
+                      className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" 
+                    />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">NCP Alignment Description</label>
-                    <input placeholder="e.g. Grade 10 Language alignment" className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" />
+                    <input 
+                      value={singleSlo.ncpDesc}
+                      onChange={e => setSingleSlo({...singleSlo, ncpDesc: e.target.value})}
+                      placeholder="e.g. Grade 10 Language alignment" 
+                      className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" 
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-3 pt-4 pb-4 sm:pb-0">
                 <Button variant="ghost" onClick={() => setShowModal(false)} className="flex-1 h-12 rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest">Abort</Button>
-                <Button onClick={() => setShowModal(false)} className="flex-1 h-12 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90">Commit Node</Button>
+                <Button onClick={handleCommitSingle} className="flex-1 h-12 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90">Commit Node</Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showBulkModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+              onClick={() => {
+                setShowBulkModal(false)
+                setBulkText('')
+                setParsedSLOs([])
+              }} 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 100 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 100 }}
+              className="relative bg-background border-t sm:border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-2xl p-6 sm:p-8 space-y-6 overflow-hidden"
+            >
+               <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
+               <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-heading font-black tracking-tight text-foreground uppercase tracking-widest">Bulk Import Excel / CSV</h3>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Copy-paste spreadsheet ranges or drop a CSV file</p>
+                </div>
+                <button onClick={() => {
+                  setShowBulkModal(false)
+                  setBulkText('')
+                  setParsedSLOs([])
+                }} className="p-2 hover:bg-muted rounded-xl transition-colors"><X size={20} /></button>
+              </div>
+
+              <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1 scrollbar-hide">
+                {/* Drag and Drop Zone */}
+                <div 
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleFileDrop}
+                  className="border-2 border-dashed border-border hover:border-primary/50 rounded-2xl p-6 text-center transition-all bg-muted/20 relative group"
+                >
+                  <input 
+                    type="file" 
+                    accept=".csv" 
+                    onChange={handleFileSelect} 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <Globe className="mx-auto text-muted-foreground group-hover:text-primary transition-colors mb-2" size={28} />
+                  <p className="text-xs font-bold text-foreground">Drag & Drop `.csv` File Here</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">or click to browse local folders</p>
+                </div>
+
+                <div className="flex items-center my-4">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="px-3 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Or Paste From Clipboard</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                {/* Paste Area */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Paste Excel Spreadsheet Range</label>
+                  <textarea 
+                    rows={4}
+                    value={bulkText}
+                    onChange={(e) => {
+                      setBulkText(e.target.value)
+                      handleParseBulk(e.target.value)
+                    }}
+                    placeholder="Example Format (Tab-separated columns from Excel):&#13;SLO-105	Students can analyze thermal properties	Science	Chapter 1	NCP-SCI-121&#13;SLO-106	Students can solve algebraic limits	Mathematics	Chapter 2	NCP-MAT-116"
+                    className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono resize-none shadow-inner h-[120px] placeholder:font-sans leading-relaxed"
+                  />
+                </div>
+
+                {/* Preview Grid */}
+                {parsedSLOs.length > 0 && (
+                  <div className="border border-border rounded-2xl overflow-hidden shadow-sm bg-muted/10">
+                    <div className="px-4 py-2.5 bg-muted/50 border-b border-border flex justify-between items-center">
+                      <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Parsed Preview ({parsedSLOs.length} Rows)</span>
+                      <span className="text-[9px] font-black text-primary uppercase bg-primary/10 px-2.5 py-0.5 rounded-full font-sans">Ready to Commit</span>
+                    </div>
+                    <div className="max-h-[160px] overflow-y-auto">
+                      <table className="w-full text-left text-[11px] border-collapse">
+                        <thead>
+                          <tr className="bg-muted/30 border-b border-border text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                            <th className="p-2.5 pl-4">Code</th>
+                            <th className="p-2.5">Description</th>
+                            <th className="p-2.5">Subject</th>
+                            <th className="p-2.5">Chapter</th>
+                            <th className="p-2.5">NCP</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                          {parsedSLOs.map((row, idx) => (
+                            <tr key={idx} className="hover:bg-background/80 transition-colors">
+                              <td className="p-2.5 pl-4 font-mono font-bold text-primary uppercase">{row.id}</td>
+                              <td className="p-2.5 truncate max-w-[150px] font-semibold text-foreground">{row.description}</td>
+                              <td className="p-2.5"><span className="px-1.5 py-0.5 rounded bg-muted border text-[9px] font-bold text-foreground">{row.subject}</span></td>
+                              <td className="p-2.5 text-muted-foreground font-medium">{row.chapter}</td>
+                              <td className="p-2.5 font-mono text-[9px] text-muted-foreground/60">{row.ncp}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4 pb-4 sm:pb-0">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    setShowBulkModal(false)
+                    setBulkText('')
+                    setParsedSLOs([])
+                  }} 
+                  className="flex-1 h-12 rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCommitBulk} 
+                  className="flex-1 h-12 bg-primary text-white rounded-xl sm:rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90"
+                >
+                  Commit Import ({parsedSLOs.length})
+                </Button>
               </div>
             </motion.div>
           </div>

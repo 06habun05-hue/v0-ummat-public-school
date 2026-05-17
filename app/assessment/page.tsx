@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 export default function AssessmentPage() {
   const [filters, setFilters] = useState({
@@ -37,6 +38,37 @@ export default function AssessmentPage() {
     return getSLOsByChapter(filters.subject, filters.chapter)
   }, [filters.subject, filters.chapter])
 
+  const handleExportGrades = () => {
+    if (activeSLOs.length === 0) {
+      toast.error('No SLOs found for the selected subject and chapter!')
+      return
+    }
+    const headers = ['Student ID', 'Student Name', ...activeSLOs.map(s => s.id)]
+    const mockStudents = [
+      { id: 'STU001', name: 'Ahmed Hassan' },
+      { id: 'STU002', name: 'Fatima Khan' },
+      { id: 'STU003', name: 'Muhammad Ali' },
+      { id: 'STU004', name: 'Zainab Ahmed' },
+      { id: 'STU005', name: 'Hassan Ibrahim' }
+    ]
+    const csvRows = mockStudents.map((student, idx) => [
+      student.id,
+      student.name,
+      ...activeSLOs.map((_, sIdx) => (idx + sIdx) % 4 + 1)
+    ])
+    const csvContent = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `Grades_Export_${filters.class}_${filters.subject}_${filters.chapter}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success(`Exported ${filters.class} assessment sheet successfully!`)
+  }
+
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-[1600px] mx-auto">
       {/* Header */}
@@ -51,10 +83,14 @@ export default function AssessmentPage() {
         </motion.div>
         
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 sm:gap-3">
-          <Button variant="outline" className="flex-1 sm:flex-none h-10 sm:h-12 px-4 sm:px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-primary hover:text-white transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm">
+          <Button 
+            onClick={handleExportGrades}
+            variant="outline" 
+            className="flex-1 sm:flex-none h-10 sm:h-12 px-4 sm:px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-primary hover:text-white transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm"
+          >
             Export
           </Button>
-          <Button className="flex-1 sm:flex-none h-10 sm:h-12 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-primary text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">
+          <Button className="flex-1 sm:flex-none h-10 sm:h-12 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-primary text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all animate-pulse">
             Save Grades
           </Button>
         </motion.div>
