@@ -45,10 +45,10 @@ export default function AttendancePage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">
-            Attendance Registry
+            Student Attendance
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Real-time synchronization of student presence and academic participation
+            Record student attendance and class participation
           </p>
         </motion.div>
         
@@ -61,7 +61,7 @@ export default function AttendancePage() {
                 viewMode === 'date' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              Daily Audit
+              Daily Attendance
             </button>
             <button
               onClick={() => setViewMode('week')}
@@ -192,7 +192,7 @@ export default function AttendancePage() {
         {/* Info Message */}
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-            Audit: <span className="text-primary font-black ml-1">{filters.class}</span> • <span className="text-primary font-black">{filters.subject}</span>
+            Class: <span className="text-primary font-black ml-1">{filters.class}</span> • <span className="text-primary font-black">{filters.subject}</span>
           </p>
           <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest">
             Syncing <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />

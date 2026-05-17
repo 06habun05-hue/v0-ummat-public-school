@@ -43,10 +43,10 @@ export default function AssessmentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">
-            Assessment Matrix
+            Student Assessments
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
-            Orchestrate grading, SLO mastery, and academic performance metrics
+            Record grades and track student learning outcomes
           </p>
         </motion.div>
         
@@ -55,7 +55,7 @@ export default function AssessmentPage() {
             Export
           </Button>
           <Button className="flex-1 sm:flex-none h-10 sm:h-12 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-primary text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">
-            Commit
+            Save Grades
           </Button>
         </motion.div>
       </div>
@@ -206,10 +206,10 @@ export default function AssessmentPage() {
            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Sparkles size={20} />
            </div>
-           <div>
-              <p className="text-sm font-black text-foreground uppercase tracking-wider">Productivity Protocol</p>
-              <p className="text-xs text-muted-foreground font-medium">Select a cell and use your keyboard (1-4) for rapid entry. Bulk pasting from external spreadsheets is supported.</p>
-           </div>
+            <div>
+               <p className="text-sm font-black text-foreground uppercase tracking-wider">Quick Entry Tips</p>
+               <p className="text-xs text-muted-foreground font-medium">Select a cell and use your keyboard (1-4) for rapid entry. Bulk pasting from external spreadsheets is supported.</p>
+            </div>
         </div>
       </motion.div>
     </div>

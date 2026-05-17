@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useApprovalStore } from '@/lib/store/approval-store'
 import { useUIStore } from '@/lib/store/ui-store'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
 
 const classPerformanceOpts = {
   tooltip: { trigger: 'axis' },
@@ -71,18 +72,18 @@ export function Dashboard() {
   const m = getBranchMultiplier()
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-heading font-bold text-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">
             {isBranchAdmin ? `${selectedBranch} Overview` : 'Analytics Overview'}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
             {isBranchAdmin ? `Performance metrics for ${selectedBranch}` : 'Real-time metrics and performance insights'}
           </p>
-        </div>
-        <div className="relative">
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="relative">
           <button onClick={() => setDateOpen(!dateOpen)} className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium">
             <Calendar size={14} />
             {dateRange === 'month' ? 'This Month' : 'This Quarter'}
@@ -97,86 +98,122 @@ export function Dashboard() {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <MetricCard label="Total Students" value={String(Math.round(2458 * m))} icon={Users} trend={{ percentage: 12, isPositive: true }} />
-        <MetricCard label="Total Teachers" value={String(Math.round(124 * m))} icon={BookOpen} trend={{ percentage: 5, isPositive: true }} />
-        <MetricCard label="Attendance Rate" value={(94.2 * m).toFixed(1) + '%'} icon={CheckCircle2} trend={{ percentage: 3, isPositive: true }} />
-        <MetricCard label="Pending Approvals" value={String(Math.round(pending.length * m))} icon={AlertCircle} trend={{ percentage: 8, isPositive: false }} />
-        <MetricCard label="Fee Collection" value={(87.5 * m).toFixed(1) + '%'} icon={CreditCard} trend={{ percentage: 6, isPositive: true }} />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {[
+          { label: "Total Students", value: String(Math.round(2458 * m)), icon: Users, trend: { percentage: 12, isPositive: true } },
+          { label: "Total Teachers", value: String(Math.round(124 * m)), icon: BookOpen, trend: { percentage: 5, isPositive: true } },
+          { label: "Attendance Rate", value: (94.2 * m).toFixed(1) + '%', icon: CheckCircle2, trend: { percentage: 3, isPositive: true } },
+          { label: "Pending Approvals", value: String(Math.round(pending.length * m)), icon: AlertCircle, trend: { percentage: 8, isPositive: false } },
+          { label: "Fee Collection", value: (87.5 * m).toFixed(1) + '%', icon: CreditCard, trend: { percentage: 6, isPositive: true } }
+        ].map((card, i) => (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <MetricCard label={card.label} value={card.value} icon={card.icon} trend={card.trend} />
+          </motion.div>
+        ))}
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-background border border-border rounded-lg p-5">
-          <h3 className="font-heading font-semibold text-sm text-foreground mb-4">Class Performance</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="bg-background border border-border/50 rounded-3xl p-6 shadow-md"
+        >
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Class Performance</h3>
           <ReactECharts option={classPerformanceOpts} style={{ height: 200 }} />
-        </div>
-        <div className="bg-background border border-border rounded-lg p-5">
-          <h3 className="font-heading font-semibold text-sm text-foreground mb-4">Attendance Trend</h3>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-background border border-border/50 rounded-3xl p-6 shadow-md"
+        >
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Attendance Trend</h3>
           <ReactECharts option={attendanceTrendOpts} style={{ height: 200 }} />
-        </div>
+        </motion.div>
       </div>
 
       {/* Bottom Row: Fee + Approvals Queue + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fee donut */}
-        <div className="bg-background border border-border rounded-lg p-5 flex flex-col items-center">
-          <h3 className="font-heading font-semibold text-sm text-foreground mb-2 self-start">Fee Collection</h3>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-background border border-border/50 rounded-3xl p-6 shadow-md flex flex-col items-center"
+        >
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2 self-start">Fee Collection</h3>
           <ReactECharts option={feeOpts} style={{ height: 160, width: '100%' }} />
-          <div className="flex gap-4 text-xs mt-1">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block"/>Collected</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning inline-block"/>Pending</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent inline-block"/>Overdue</span>
+          <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest mt-1">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary inline-block"/>Collected</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-warning inline-block"/>Pending</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-accent inline-block"/>Overdue</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Approval Queue */}
-        <div className="bg-background border border-border rounded-lg p-5">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-background border border-border/50 rounded-3xl p-6 shadow-md"
+        >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-semibold text-sm text-foreground">Pending Approvals</h3>
-            <Link href="/approvals" className="text-xs text-primary hover:underline font-medium">View all</Link>
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Pending Approvals</h3>
+            <Link href="/approvals" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">View all</Link>
           </div>
           {pending.length === 0 ? (
             <div className="flex flex-col items-center py-6 text-muted-foreground">
               <CheckCheck size={28} className="mb-2 text-primary/40" />
-              <p className="text-xs">All caught up!</p>
+              <p className="text-xs font-bold uppercase tracking-wider">All caught up!</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {pending.slice(0,4).map(p => (
-                <div key={p.id} className="flex items-start gap-2.5 p-2.5 bg-muted/40 rounded-md">
+                <div key={p.id} className="flex items-start gap-2.5 p-3 bg-muted/40 rounded-2xl border border-border/20">
                   <div className="w-1.5 h-1.5 rounded-full bg-warning mt-1.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{p.teacher}</p>
-                    <p className="text-[10px] text-muted-foreground">{p.class} · {p.subject}</p>
+                    <p className="text-xs font-bold text-foreground truncate">{p.teacher}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-semibold mt-0.5">{p.class} · {p.subject}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Recent Activity */}
-        <div className="bg-background border border-border rounded-lg p-5">
-          <h3 className="font-heading font-semibold text-sm text-foreground mb-4">Recent Activity</h3>
-          <div className="space-y-3">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-background border border-border/50 rounded-3xl p-6 shadow-md"
+        >
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">Recent Activity</h3>
+          <div className="space-y-4">
             {recentActivity.map((a, i) => (
               <div key={i} className="flex items-start gap-2.5">
-                <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0', actColor[a.type])}>
+                <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black uppercase flex-shrink-0', actColor[a.type])}>
                   {a.user.split(' ').map(n=>n[0]).slice(0,2).join('')}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">{a.user}</p>
-                  <p className="text-[10px] text-muted-foreground">{a.action} · {a.time}</p>
+                  <p className="text-xs font-bold text-foreground truncate">{a.user}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{a.action} · {a.time}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )

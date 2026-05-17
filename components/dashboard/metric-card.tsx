@@ -22,14 +22,14 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'bg-background border border-border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer',
+        'bg-background border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer',
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-muted-foreground font-medium mb-2">{label}</p>
-          <p className="text-3xl font-heading font-bold text-foreground mb-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{label}</p>
+          <p className="text-3xl font-heading font-black text-foreground mb-3">
             {value}
           </p>
           {trend && (
@@ -48,7 +48,7 @@ export function MetricCard({
             </div>
           )}
         </div>
-        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
           <Icon size={24} className="text-primary" />
         </div>
       </div>
