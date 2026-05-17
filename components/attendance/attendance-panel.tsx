@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { CheckCircle2, XCircle, Clock, Search, Calendar as CalendarIcon, Users, ChevronLeft, ChevronRight, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useUIStore } from '@/lib/store/ui-store'
 
 interface StudentAttendance {
   id: string
@@ -24,6 +25,8 @@ const statusConfig = {
 }
 
 export function AttendancePanel({ students: initialStudents = [] }: AttendancePanelProps) {
+  const { role } = useUIStore()
+  const isReadOnly = role !== 'TEACHER'
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily')
   const [searchQuery, setSearchQuery] = useState('')
   const [students, setStudents] = useState<StudentAttendance[]>(
@@ -92,14 +95,16 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
           />
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto">
-          <button onClick={() => markAll('present')} className="flex-1 md:flex-none px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary/20 transition-all">
-            All Present
-          </button>
-          <button onClick={() => markAll('absent')} className="flex-1 md:flex-none px-4 py-2 bg-accent/10 text-accent border border-accent/20 rounded-lg text-xs font-bold hover:bg-accent/20 transition-all">
-            All Absent
-          </button>
-        </div>
+        {!isReadOnly && (
+          <div className="flex gap-2 w-full md:w-auto">
+            <button onClick={() => markAll('present')} className="flex-1 md:flex-none px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary/20 transition-all">
+              All Present
+            </button>
+            <button onClick={() => markAll('absent')} className="flex-1 md:flex-none px-4 py-2 bg-accent/10 text-accent border border-accent/20 rounded-lg text-xs font-bold hover:bg-accent/20 transition-all">
+              All Absent
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Stats Summary */}
@@ -156,10 +161,11 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
                           return (
                             <button
                               key={status}
-                              onClick={() => markStatus(student.id, status)}
+                              onClick={() => !isReadOnly && markStatus(student.id, status)}
                               className={cn(
                                 'flex flex-col items-center gap-1 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border transition-all min-w-[50px] sm:min-w-[70px]',
-                                isActive ? `${config.bg} ${config.color} ${config.border} ring-2 ring-primary/20 shadow-inner` : `bg-background text-muted-foreground border-border ${config.hover} hover:text-foreground`
+                                isActive ? `${config.bg} ${config.color} ${config.border} ring-2 ring-primary/20 shadow-inner` : `bg-background text-muted-foreground border-border ${config.hover} hover:text-foreground`,
+                                isReadOnly && 'cursor-default'
                               )}
                             >
                               <config.icon size={14} className="sm:w-4 sm:h-4" />
@@ -192,14 +198,16 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
         </div>
       </div>
 
-      <div className="flex justify-end pt-2">
-        <button 
-          onClick={() => toast.success('Attendance records saved successfully')}
-          className="px-8 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
-        >
-          <Check size={18}/> Save Attendance
-        </button>
-      </div>
+      {!isReadOnly && (
+        <div className="flex justify-end pt-2">
+          <button 
+            onClick={() => toast.success('Attendance records saved successfully')}
+            className="px-8 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
+          >
+            <Check size={18}/> Save Attendance
+          </button>
+        </div>
+      )}
     </div>
   )
 }

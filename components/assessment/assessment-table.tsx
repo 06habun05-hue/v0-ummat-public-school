@@ -10,6 +10,7 @@ import { AlertCircle, Check, Trash2, Loader2, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useAssessmentStore } from '@/lib/store/assessment-store'
+import { useUIStore } from '@/lib/store/ui-store'
 import { SLO } from '@/lib/data/curriculum'
 
 interface StudentAssessment {
@@ -33,6 +34,8 @@ const gradeColorMap: Record<number, string> = {
 }
 
 export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTableProps) {
+  const { role } = useUIStore()
+  const isReadOnly = role !== 'TEACHER'
   const { saveStatus, setSaveStatus } = useAssessmentStore()
   const [data, setData] = useState<StudentAssessment[]>(
     initialData.length > 0
@@ -66,7 +69,7 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
 
   // Paste Logic
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
-    if (!editingCell) return
+    if (!editingCell || isReadOnly) return
     
     e.preventDefault()
     const text = e.clipboardData.getData('text')
@@ -139,7 +142,7 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                 isEditing ? 'bg-primary/10 ring-2 ring-primary ring-inset z-20 shadow-inner' : 'hover:bg-muted/50',
                 !value && !isEditing && 'bg-warning/5'
               )}
-              onClick={() => setEditingCell({ rowIndex, columnId })}
+              onClick={() => !isReadOnly && setEditingCell({ rowIndex, columnId })}
             >
               {isEditing ? (
                 <input
@@ -250,28 +253,37 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                </span>
              </div>
            </div>
-           <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
-             <Info size={14} className="text-primary" />
-             <span>Copy from Excel and paste anywhere in the grid</span>
-           </div>
+            {isReadOnly ? (
+              <div className="flex items-center gap-2 text-xs text-primary font-bold">
+                <AlertCircle size={14} className="text-primary" />
+                <span>Viewing in Read-Only Mode</span>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+                <Info size={14} className="text-primary" />
+                <span>Copy from Excel and paste anywhere in the grid</span>
+              </div>
+            )}
         </div>
-        <div className="flex gap-2">
-            <button 
-              onClick={() => {
-                if(confirm('Clear all grades for this chapter?')) {
-                  const cleared = data.map(s => {
-                    const { id, name } = s
-                    return { id, name } as StudentAssessment
-                  })
-                  setData(cleared)
-                  toast.success('Grades cleared')
-                }
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-md hover:bg-accent hover:text-white text-xs font-bold transition-all"
-            >
-              <Trash2 size={14} /> Reset
-            </button>
-        </div>
+        {!isReadOnly && (
+          <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  if(confirm('Clear all grades for this chapter?')) {
+                    const cleared = data.map(s => {
+                      const { id, name } = s
+                      return { id, name } as StudentAssessment
+                    })
+                    setData(cleared)
+                    toast.success('Grades cleared')
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-md hover:bg-accent hover:text-white text-xs font-bold transition-all"
+              >
+                <Trash2 size={14} /> Reset
+              </button>
+          </div>
+        )}
       </div>
 
       <div className="border border-border rounded-2xl shadow-xl bg-background overflow-hidden">
@@ -321,17 +333,19 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4">
-        <button className="flex items-center gap-2 px-6 py-2.5 bg-background border-2 border-primary/20 text-primary rounded-xl hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest active:scale-95">
-          Download PDF Report
-        </button>
-        <button 
-          onClick={() => toast.success('Grades locked and submitted for approval')}
-          className="flex items-center gap-2 px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 active:scale-95"
-        >
-          <Check size={16} /> Finalize Grades
-        </button>
-      </div>
+      {!isReadOnly && (
+        <div className="flex justify-end gap-3 pt-4">
+          <button className="flex items-center gap-2 px-6 py-2.5 bg-background border-2 border-primary/20 text-primary rounded-xl hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest active:scale-95">
+            Download PDF Report
+          </button>
+          <button 
+            onClick={() => toast.success('Grades locked and submitted for approval')}
+            className="flex items-center gap-2 px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 active:scale-95"
+          >
+            <Check size={16} /> Finalize Grades
+          </button>
+        </div>
+      )}
     </div>
   )
 }
