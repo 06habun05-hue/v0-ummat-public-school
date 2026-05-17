@@ -64,7 +64,7 @@ export default function AdminPage() {
           animate={{ opacity: 1, x: 0 }}
         >
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">Admin Control Center</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">Orchestrate users, branches, and system-wide configurations</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">Manage users, branches, and system settings</p>
         </motion.div>
         
         <motion.div 
@@ -127,7 +127,7 @@ export default function AdminPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-muted/50 border-b border-border">
-                        {['User Profile','Email','Access Role','Branch Assignment','Status','Actions'].map(h => (
+                        {['User','Email','Role','Branch','Status','Actions'].map(h => (
                           <th key={h} className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">{h}</th>
                         ))}
                       </tr>
@@ -254,7 +254,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <Button variant="outline" className="w-full rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all group-hover:border-primary">
-                      Manage Infrastructure
+                      Manage Branch
                     </Button>
                   </CardContent>
                 </Card>
@@ -264,7 +264,7 @@ export default function AdminPage() {
                   <Plus size={32} />
                 </div>
                 <div className="text-center">
-                  <span className="text-sm font-black uppercase tracking-widest">Provision Branch</span>
+                  <span className="text-sm font-black uppercase tracking-widest">Add Branch</span>
                   <p className="text-[10px] opacity-60 mt-1">Initialize settings for a new campus</p>
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl sm:text-2xl font-heading font-black tracking-tight text-foreground">Add New User</h3>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">System Provisioning</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Create Account</p>
                 </div>
                 <button onClick={() => setShowUserModal(false)} className="p-2 hover:bg-muted rounded-xl transition-colors"><X size={20} /></button>
               </div>

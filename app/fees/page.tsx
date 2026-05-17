@@ -107,8 +107,8 @@ export default function FeesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">Financial Treasury</h2>
-          <p className="text-sm text-muted-foreground mt-1">Orchestrating institutional liquidity and student fee architectures</p>
+          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">Fee Management</h2>
+          <p className="text-sm text-muted-foreground mt-1">Track and manage student payments</p>
         </motion.div>
         
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
@@ -124,9 +124,9 @@ export default function FeesPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Cumulative Revenue', value: `PKR ${(totalCollected / 1000).toFixed(0)}k`, icon: Wallet, color: 'text-primary', bg: 'bg-primary/10', trend: '+12% vs last term' },
-          { label: 'Outstanding Liquidity', value: `PKR ${(totalOutstanding / 1000).toFixed(0)}k`, icon: AlertCircle, color: 'text-accent', bg: 'bg-accent/10', trend: '-5% this month' },
-          { label: 'Collection Velocity', value: `${collectionRate}%`, icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10', trend: 'Target: 95%' },
+          { label: 'Total Collected', value: `PKR ${(totalCollected / 1000).toFixed(0)}k`, icon: Wallet, color: 'text-primary', bg: 'bg-primary/10', trend: '+12% vs last term' },
+          { label: 'Pending Fees', value: `PKR ${(totalOutstanding / 1000).toFixed(0)}k`, icon: AlertCircle, color: 'text-accent', bg: 'bg-accent/10', trend: '-5% this month' },
+          { label: 'Collection Rate', value: `${collectionRate}%`, icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10', trend: 'Target: 95%' },
           { label: 'Overdue Profiles', value: `${overdueCount}`, icon: AlertCircle, color: 'text-warning', bg: 'bg-warning/10', trend: 'Critical Attention' },
         ].map((card, i) => (
           <motion.div 
@@ -158,7 +158,7 @@ export default function FeesPage() {
         <Card className="lg:col-span-2 border-border shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="bg-muted/30 border-b border-border/50">
             <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-              <TrendingUp size={14} className="text-primary" /> Monthly Revenue Architecture
+              <TrendingUp size={14} className="text-primary" /> Monthly Revenue
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -229,7 +229,7 @@ export default function FeesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
-                {[['name', 'Student Entity'], ['', 'Academic Unit'], ['', 'Contract Amount'], ['balance', 'Outstanding Balance'], ['status', 'Treasury Status'], ['', 'Last Settlement'], ['', 'Action']].map(([key, label], i) => (
+                {[['name', 'Student Name'], ['', 'Class'], ['', 'Total Amount'], ['balance', 'Balance'], ['status', 'Status'], ['', 'Last Payment'], ['', 'Action']].map(([key, label], i) => (
                   <th 
                     key={i} 
                     onClick={() => key && handleSort(key as typeof sortKey)} 
