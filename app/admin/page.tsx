@@ -6,7 +6,7 @@ import {
   Plus, Edit, Trash2, Shield, Building2, Settings, 
   Moon, Sun, Bell, X, Check, Calendar, Globe, 
   Database, Palette, Lock, Users as UsersIcon,
-  ChevronRight
+  ChevronRight, Clock
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
