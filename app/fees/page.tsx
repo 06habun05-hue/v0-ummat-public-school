@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { format } from 'date-fns'
 import { 
   Search, DollarSign, TrendingUp, AlertCircle, 
   CheckCircle2, ChevronDown, ChevronUp, Filter,
