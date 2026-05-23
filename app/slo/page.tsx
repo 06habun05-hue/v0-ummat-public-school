@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 
 import { mockSLOs, subjects as curriculumSubjects, chapters as curriculumChapters, SLO } from '@/lib/data/curriculum'
 import { toast } from 'sonner'
+import * as XLSX from 'xlsx'
 
 const subjects = ['All', ...curriculumSubjects]
 const chapters = ['All', ...curriculumChapters]
@@ -100,25 +101,39 @@ export default function SLOPage() {
     const lines = text.split(/\r?\n/)
     const rows: SLO[] = []
     lines.forEach((line) => {
-      if (!line.trim()) return
+      const trimmedLine = line.trim()
+      if (!trimmedLine) return
       
-      // Delimiter detection: split by tabs, consecutive spaces (2 or more spaces), or commas
       let cols: string[] = []
-      if (line.includes('\t')) {
-        cols = line.split('\t')
-      } else if (/\s{2,}/.test(line)) {
-        cols = line.split(/\s{2,}/)
-      } else if (line.includes(',')) {
-        cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      
+      // Delimiter detection
+      if (trimmedLine.includes('\t')) {
+        cols = trimmedLine.split('\t')
+      } else if (trimmedLine.includes('|')) {
+        cols = trimmedLine.split('|')
+      } else if (/\s{2,}/.test(trimmedLine)) {
+        cols = trimmedLine.split(/\s{2,}/)
+      } else if (trimmedLine.includes(';')) {
+        cols = trimmedLine.split(';')
+      } else if (trimmedLine.includes(',')) {
+        cols = trimmedLine.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
       } else {
-        cols = [line]
+        // No explicit delimiter. Inspect for a leading code pattern (e.g. SLO-201, NCP-301)
+        const codePatternMatch = trimmedLine.match(/^([A-Z0-9_-]{2,10}-\d+|SLO-?\d+|[A-Z]{2,4}[0-9]+)\s+(.+)$/i)
+        if (codePatternMatch) {
+          cols = [codePatternMatch[1], codePatternMatch[2]]
+        } else {
+          // Fallback: treat the entire line as the description and auto-generate code
+          cols = ['', trimmedLine]
+        }
       }
       
       if (cols[0] || cols[1]) {
-        const idVal = cols[0]?.trim() || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+        const generatedId = `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+        const idVal = cols[0]?.trim() || generatedId
         rows.push({
           id: idVal.toUpperCase().replace(/^"|"$/g, ''),
-          description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported learn objective description',
+          description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported learning objective description',
           subject: cols[2]?.trim().replace(/^"|"$/g, '') || 'English',
           chapter: cols[3]?.trim().replace(/^"|"$/g, '') || 'Chapter 1',
           ncp: cols[4]?.trim().replace(/^"|"$/g, '') || 'NCP-GENERIC'
@@ -128,7 +143,7 @@ export default function SLOPage() {
     setParsedSLOs(rows)
   }
 
-  // Drag and drop CSV handlers
+  // Drag and drop spreadsheet handlers
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files?.[0]
@@ -141,36 +156,101 @@ export default function SLOPage() {
   }
 
   const parseFile = (file: File) => {
-    if (!file.name.endsWith('.csv')) {
-      toast.error('Please upload a standard .csv spreadsheet file!')
+    const fileName = file.name.toLowerCase()
+    const isCSV = fileName.endsWith('.csv')
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls')
+
+    if (!isCSV && !isExcel) {
+      toast.error('Please upload a standard .csv, .xlsx, or .xls spreadsheet file!')
       return
     }
+
     const reader = new FileReader()
+
     reader.onload = (event) => {
-      const text = event.target?.result as string
-      const lines = text.split(/\r?\n/)
-      const rows: SLO[] = []
-      lines.forEach((line, index) => {
-        if (index === 0 && (line.toLowerCase().includes('code') || line.toLowerCase().includes('description'))) {
-          return // Skip header
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer)
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheetName = workbook.SheetNames[0]
+        const sheet = workbook.Sheets[sheetName]
+        if (!sheet) {
+          toast.error('No sheets found in the Excel workbook!')
+          return
         }
-        if (!line.trim()) return
-        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-        if (cols[0] || cols[1]) {
-          const idVal = cols[0]?.trim().replace(/^"|"$/g, '') || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+        
+        const jsonRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 })
+        if (jsonRows.length === 0) {
+          toast.error('The uploaded spreadsheet file is empty!')
+          return
+        }
+
+        // Smart Column Mapping: check first 5 rows to locate a header row
+        let headerRowIndex = 0
+        let headers: string[] = []
+        
+        for (let i = 0; i < Math.min(jsonRows.length, 5); i++) {
+          const row = jsonRows[i]
+          if (row && row.some(cell => typeof cell === 'string' && (cell.toLowerCase().includes('code') || cell.toLowerCase().includes('description') || cell.toLowerCase().includes('subject')))) {
+            headers = row.map(cell => String(cell || '').trim().toLowerCase())
+            headerRowIndex = i
+            break
+          }
+        }
+
+        // Fallback: assume column positions
+        if (headers.length === 0) {
+          headers = ['outcome code', 'objective description', 'subject', 'curriculum unit', 'ncp alignment']
+          headerRowIndex = -1 // Start reading from first row directly
+        }
+
+        const colIndex = {
+          id: headers.findIndex(h => h.includes('code') || h.includes('id') || h.includes('outcome')),
+          description: headers.findIndex(h => h.includes('description') || h.includes('objective') || h.includes('slo')),
+          subject: headers.findIndex(h => h.includes('subject') || h.includes('course')),
+          chapter: headers.findIndex(h => h.includes('chapter') || h.includes('unit') || h.includes('curriculum')),
+          ncp: headers.findIndex(h => h.includes('ncp') || h.includes('alignment'))
+        }
+
+        if (colIndex.id === -1) colIndex.id = 0
+        if (colIndex.description === -1) colIndex.description = 1
+        if (colIndex.subject === -1) colIndex.subject = 2
+        if (colIndex.chapter === -1) colIndex.chapter = 3
+        if (colIndex.ncp === -1) colIndex.ncp = 4
+
+        const rows: SLO[] = []
+        const startIndex = headerRowIndex + 1
+        
+        for (let i = startIndex; i < jsonRows.length; i++) {
+          const row = jsonRows[i]
+          if (!row || row.length === 0 || row.every(cell => cell === null || cell === undefined || cell === '')) {
+            continue
+          }
+
+          const idValRaw = String(row[colIndex.id] || '').trim()
+          const descVal = String(row[colIndex.description] || '').trim()
+          
+          if (!idValRaw && !descVal) continue
+
+          const idVal = idValRaw || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+
           rows.push({
             id: idVal.toUpperCase(),
-            description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported curriculum outcomes',
-            subject: cols[2]?.trim().replace(/^"|"$/g, '') || 'English',
-            chapter: cols[3]?.trim().replace(/^"|"$/g, '') || 'Chapter 1',
-            ncp: cols[4]?.trim().replace(/^"|"$/g, '') || 'NCP-GENERIC'
+            description: descVal || 'Imported curriculum outcomes',
+            subject: String(row[colIndex.subject] || 'English').trim(),
+            chapter: String(row[colIndex.chapter] || 'Chapter 1').trim(),
+            ncp: String(row[colIndex.ncp] || 'NCP-GENERIC').trim()
           })
         }
-      })
-      setParsedSLOs(rows)
-      toast.success(`Successfully parsed ${rows.length} rows from CSV!`)
+
+        setParsedSLOs(rows)
+        toast.success(`Successfully parsed ${rows.length} rows from ${isCSV ? 'CSV' : 'Excel'}!`)
+      } catch (error) {
+        console.error('Spreadsheet parsing error:', error)
+        toast.error(`Failed to parse ${isCSV ? 'CSV' : 'Excel'} file.`)
+      }
     }
-    reader.readAsText(file)
+
+    reader.readAsArrayBuffer(file)
   }
 
   // Commit imported rows to active database
@@ -579,12 +659,12 @@ export default function SLOPage() {
                 >
                   <input 
                     type="file" 
-                    accept=".csv" 
+                    accept=".csv,.xlsx,.xls" 
                     onChange={handleFileSelect} 
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <Globe className="mx-auto text-muted-foreground group-hover:text-primary transition-colors mb-2" size={28} />
-                  <p className="text-xs font-bold text-foreground">Drag & Drop `.csv` File Here</p>
+                  <p className="text-xs font-bold text-foreground">Drag & Drop `.csv`, `.xlsx`, or `.xls` File Here</p>
                   <p className="text-[10px] text-muted-foreground mt-1">or click to browse local folders</p>
                 </div>
 
