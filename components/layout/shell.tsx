@@ -35,7 +35,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopNav />
-        <main className="flex-1 overflow-auto scrollbar-hide">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <PageTransition>
             {children}
           </PageTransition>

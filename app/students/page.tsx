@@ -73,7 +73,7 @@ export default function StudentsPage() {
     : <ChevronDown size={13} className="opacity-30" />
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div>
         <h2 className="text-2xl font-heading font-bold text-foreground tracking-tight">Students</h2>
         <p className="text-sm text-muted-foreground mt-1">{filtered.length} students enrolled across all branches</p>

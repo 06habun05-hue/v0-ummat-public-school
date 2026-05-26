@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { AssessmentTable } from '@/components/assessment/assessment-table'
-import { getSLOsByChapter, subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
+import { subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
+import { useAssessmentStore } from '@/lib/store/assessment-store'
 import { 
   Trophy, BookOpen, Filter, MapPin, 
   ChevronRight, Sparkles, LayoutGrid, List
@@ -20,12 +21,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 export default function AssessmentPage() {
-  const [filters, setFilters] = useState({
-    branch: 'Main Campus',
-    class: '10-A',
-    subject: 'English',
-    chapter: 'Chapter 1',
-  })
+  const { sloList, filters, setFilters } = useAssessmentStore()
 
   const branches = ['Main Campus', 'North Campus', 'South Campus']
   const classes: Record<string, string[]> = {
@@ -35,8 +31,8 @@ export default function AssessmentPage() {
   }
 
   const activeSLOs = useMemo(() => {
-    return getSLOsByChapter(filters.subject, filters.chapter)
-  }, [filters.subject, filters.chapter])
+    return sloList.filter(s => s.subject === filters.subject && s.chapter === filters.chapter)
+  }, [sloList, filters.subject, filters.chapter])
 
   const handleExportGrades = () => {
     if (activeSLOs.length === 0) {

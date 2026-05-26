@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-import { mockSLOs, subjects as curriculumSubjects, chapters as curriculumChapters, SLO } from '@/lib/data/curriculum'
+import { subjects as curriculumSubjects, chapters as curriculumChapters, SLO } from '@/lib/data/curriculum'
+import { useAssessmentStore } from '@/lib/store/assessment-store'
 import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
 
@@ -37,8 +38,8 @@ export default function SLOPage() {
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [chapterFilter, setChapterFilter] = useState('All')
   
-  // Dynamic State integration
-  const [sloList, setSloList] = useState<SLO[]>(mockSLOs)
+  // Dynamic State integration from Zustand
+  const { sloList, addSLO, bulkImportSLOs } = useAssessmentStore()
   
   // Modal states
   const [showModal, setShowModal] = useState(false)
@@ -86,7 +87,7 @@ export default function SLOPage() {
       ncp: singleSlo.ncp.trim() || 'NCP-GENERIC'
     }
     
-    setSloList([newEntry, ...sloList])
+    addSLO(newEntry)
     toast.success(`Successfully provisioned node ${newEntry.id}!`)
     setShowModal(false)
     setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', description: '', ncp: '', ncpDesc: '' })
@@ -260,17 +261,7 @@ export default function SLOPage() {
       return
     }
     
-    // Filter duplicates
-    const finalRows: SLO[] = []
-    parsedSLOs.forEach(row => {
-      if (sloList.some(s => s.id === row.id) || finalRows.some(s => s.id === row.id)) {
-        // Resolve duplicate code on import
-        row.id = `${row.id}-NEW`
-      }
-      finalRows.push(row)
-    })
-
-    setSloList([...finalRows, ...sloList])
+    bulkImportSLOs(parsedSLOs)
     toast.success(`Successfully imported and committed ${finalRows.length} SLO records!`)
     setShowBulkModal(false)
     setBulkText('')

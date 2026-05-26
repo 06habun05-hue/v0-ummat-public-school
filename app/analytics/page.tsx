@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Overview')
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div>
         <h2 className="text-2xl font-heading font-bold">Analytics Dashboard</h2>
         <p className="text-sm text-muted-foreground mt-1">Institution-wide performance and behavioral insights</p>

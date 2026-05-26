@@ -121,7 +121,7 @@ export default function StudentProfilePage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-neutral/30 min-h-screen">
+    <div className="p-4 sm:p-6 md:p-8 space-y-8 bg-neutral/30 min-h-screen">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">

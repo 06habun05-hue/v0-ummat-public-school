@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sheet'
 import { SidebarContent } from './sidebar'
 import Image from 'next/image'
+import { DemoRoleSwitcher } from './demo-role-switcher'
 
 const pathLabels: Record<string, string> = {
   '/': 'Dashboard',
@@ -60,7 +61,7 @@ export function TopNav() {
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
-  const { selectedBranch, setSelectedBranch, isDarkMode, toggleDarkMode, role, logout } = useUIStore()
+  const { selectedBranch, setSelectedBranch, isDarkMode, toggleDarkMode, role, logout, userName, userAvatar, userEmail } = useUIStore()
   const branches = ['Main Campus', 'North Campus', 'South Campus']
   const [branchOpen, setBranchOpen] = useState(false)
 
@@ -180,11 +181,8 @@ export function TopNav() {
               <kbd className="text-[10px] bg-background border border-border px-1.5 py-0.5 rounded-md font-mono font-bold shadow-sm">⌘K</kbd>
             </button>
 
-            {/* Role Badge (Static) */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-xl text-[10px] font-black text-primary uppercase tracking-wider">
-              <ShieldCheck size={12} />
-              {role.replace('_', ' ')}
-            </div>
+            {/* Demo Role Switcher */}
+            <DemoRoleSwitcher />
 
             <div className="w-px h-4 bg-border mx-1" />
 
@@ -271,11 +269,11 @@ export function TopNav() {
                 className="flex items-center gap-2.5 pl-2 pr-1.5 py-1.5 hover:bg-muted rounded-xl transition-all border border-transparent hover:border-border"
               >
                 <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center text-white font-black text-xs shadow-inner">
-                  JD
+                  {userAvatar}
                 </div>
                 <div className="hidden sm:flex flex-col items-start mr-1">
-                  <span className="text-[10px] font-black text-foreground leading-none">John Doe</span>
-                  <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-tighter mt-0.5">{role.split('_')[0]}</span>
+                  <span className="text-[10px] font-black text-foreground leading-none">{userName}</span>
+                  <span className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-tighter mt-0.5">{role.replace('_', ' ')}</span>
                 </div>
                 <ChevronDown size={13} className="text-muted-foreground" />
               </button>
@@ -283,7 +281,7 @@ export function TopNav() {
                 <div className="absolute right-0 mt-2 w-52 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 animate-slide-in">
                   <div className="px-4 py-3 border-b border-border mb-1">
                     <p className="text-[11px] font-black text-foreground">Account Info</p>
-                    <p className="text-[10px] text-muted-foreground font-medium truncate">john.doe@ummat.edu</p>
+                    <p className="text-[10px] text-muted-foreground font-medium truncate">{userEmail}</p>
                   </div>
                   <Link href="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
                     <Settings size={15} /> My Settings
