@@ -31,8 +31,8 @@ export default function AssessmentPage() {
   }
 
   const activeSLOs = useMemo(() => {
-    return sloList.filter(s => s.subject === filters.subject && s.chapter === filters.chapter)
-  }, [sloList, filters.subject, filters.chapter])
+    return sloList.filter(s => s.subject === filters.subject && s.chapter === filters.chapter && s.class === filters.class)
+  }, [sloList, filters.subject, filters.chapter, filters.class])
 
   const handleExportGrades = () => {
     if (activeSLOs.length === 0) {

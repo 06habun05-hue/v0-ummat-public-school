@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Search, Plus, BookOpen, ChevronDown, ChevronUp, X, Filter, Target, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -22,14 +22,7 @@ import * as XLSX from 'xlsx'
 
 const subjects = ['All', ...curriculumSubjects]
 const chapters = ['All', ...curriculumChapters]
-
-// Curriculum Map data: chapters x subjects, which SLOs are mapped
-const curriculumMap = [
-  { chapter: 'Chapter 1', English: 'SLO-001', Mathematics: 'SLO-019', Science: 'SLO-052', 'Islamic Studies': 'SLO-087', 'Social Studies': 'SLO-095' },
-  { chapter: 'Chapter 2', English: 'SLO-013', Mathematics: 'SLO-034', Science: 'SLO-072', 'Islamic Studies': null, 'Social Studies': null },
-  { chapter: 'Chapter 3', English: null, Mathematics: 'SLO-042', Science: 'SLO-082', 'Islamic Studies': null, 'Social Studies': null },
-  { chapter: 'Chapter 4', English: null, Mathematics: 'SLO-047', Science: null, 'Islamic Studies': null, 'Social Studies': null },
-]
+const classesFilterOptions = ['All', '10-A', '10-B', '9-A', '9-B', '8-A', '7-B']
 const mapSubjects = curriculumSubjects
 
 export default function SLOPage() {
@@ -37,6 +30,7 @@ export default function SLOPage() {
   const [search, setSearch] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [chapterFilter, setChapterFilter] = useState('All')
+  const [classFilter, setClassFilter] = useState('All')
   
   // Dynamic State integration from Zustand
   const { sloList, addSLO, bulkImportSLOs } = useAssessmentStore()
@@ -50,6 +44,7 @@ export default function SLOPage() {
     id: '',
     subject: 'English',
     chapter: 'Chapter 1',
+    class: '10-A',
     description: '',
     ncp: '',
     ncpDesc: ''
@@ -62,8 +57,25 @@ export default function SLOPage() {
   const filtered = sloList.filter(s =>
     (search === '' || s.id.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase())) &&
     (subjectFilter === 'All' || s.subject === subjectFilter) &&
-    (chapterFilter === 'All' || s.chapter === chapterFilter)
+    (chapterFilter === 'All' || s.chapter === chapterFilter) &&
+    (classFilter === 'All' || s.class === classFilter)
   )
+
+  // Dynamic Curriculum Map computed from active store SLOs and class selection
+  const curriculumMap = useMemo(() => {
+    return curriculumChapters.map(chap => {
+      const row: any = { chapter: chap }
+      curriculumSubjects.forEach(sub => {
+        const match = sloList.find(s => 
+          s.chapter === chap && 
+          s.subject === sub && 
+          (classFilter === 'All' || s.class === classFilter)
+        )
+        row[sub] = match ? match.id : null
+      })
+      return row
+    })
+  }, [sloList, classFilter])
 
   // Single SLO commit handler
   const handleCommitSingle = () => {
@@ -84,13 +96,14 @@ export default function SLOPage() {
       description: singleSlo.description.trim(),
       subject: singleSlo.subject,
       chapter: singleSlo.chapter,
+      class: singleSlo.class,
       ncp: singleSlo.ncp.trim() || 'NCP-GENERIC'
     }
     
     addSLO(newEntry)
     toast.success(`Successfully provisioned node ${newEntry.id}!`)
     setShowModal(false)
-    setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', description: '', ncp: '', ncpDesc: '' })
+    setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', class: '10-A', description: '', ncp: '', ncpDesc: '' })
   }
 
   // Smart Multi-Delimiter spreadsheet copy-paste parser
@@ -132,12 +145,29 @@ export default function SLOPage() {
       if (cols[0] || cols[1]) {
         const generatedId = `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
         const idVal = cols[0]?.trim() || generatedId
+        const val4 = cols[4]?.trim().replace(/^"|"$/g, '') || ''
+        const val5 = cols[5]?.trim().replace(/^"|"$/g, '') || ''
+        let parsedClass = '10-A'
+        let parsedNcp = 'NCP-GENERIC'
+        
+        if (val5) {
+          parsedClass = val4 || '10-A'
+          parsedNcp = val5 || 'NCP-GENERIC'
+        } else if (val4) {
+          if (val4.toUpperCase().startsWith('NCP')) {
+            parsedNcp = val4
+          } else {
+            parsedClass = val4
+          }
+        }
+
         rows.push({
           id: idVal.toUpperCase().replace(/^"|"$/g, ''),
           description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported learning objective description',
           subject: cols[2]?.trim().replace(/^"|"$/g, '') || 'English',
           chapter: cols[3]?.trim().replace(/^"|"$/g, '') || 'Chapter 1',
-          ncp: cols[4]?.trim().replace(/^"|"$/g, '') || 'NCP-GENERIC'
+          class: parsedClass,
+          ncp: parsedNcp
         })
       }
     })
@@ -200,7 +230,7 @@ export default function SLOPage() {
 
         // Fallback: assume column positions
         if (headers.length === 0) {
-          headers = ['outcome code', 'objective description', 'subject', 'curriculum unit', 'ncp alignment']
+          headers = ['outcome code', 'objective description', 'subject', 'curriculum unit', 'class', 'ncp alignment']
           headerRowIndex = -1 // Start reading from first row directly
         }
 
@@ -209,6 +239,7 @@ export default function SLOPage() {
           description: headers.findIndex(h => h.includes('description') || h.includes('objective') || h.includes('slo')),
           subject: headers.findIndex(h => h.includes('subject') || h.includes('course')),
           chapter: headers.findIndex(h => h.includes('chapter') || h.includes('unit') || h.includes('curriculum')),
+          class: headers.findIndex(h => h.includes('class') || h.includes('grade') || h.includes('level')),
           ncp: headers.findIndex(h => h.includes('ncp') || h.includes('alignment'))
         }
 
@@ -216,7 +247,15 @@ export default function SLOPage() {
         if (colIndex.description === -1) colIndex.description = 1
         if (colIndex.subject === -1) colIndex.subject = 2
         if (colIndex.chapter === -1) colIndex.chapter = 3
-        if (colIndex.ncp === -1) colIndex.ncp = 4
+        if (colIndex.class === -1 && headers.length > 5) {
+          colIndex.class = 4
+          colIndex.ncp = 5
+        } else if (colIndex.class === -1) {
+          colIndex.class = -1
+          if (colIndex.ncp === -1) colIndex.ncp = 4
+        } else {
+          if (colIndex.ncp === -1) colIndex.ncp = 5
+        }
 
         const rows: SLO[] = []
         const startIndex = headerRowIndex + 1
@@ -239,7 +278,8 @@ export default function SLOPage() {
             description: descVal || 'Imported curriculum outcomes',
             subject: String(row[colIndex.subject] || 'English').trim(),
             chapter: String(row[colIndex.chapter] || 'Chapter 1').trim(),
-            ncp: String(row[colIndex.ncp] || 'NCP-GENERIC').trim()
+            class: colIndex.class !== -1 ? String(row[colIndex.class] || '10-A').trim() : '10-A',
+            ncp: colIndex.ncp !== -1 ? String(row[colIndex.ncp] || 'NCP-GENERIC').trim() : 'NCP-GENERIC'
           })
         }
 
@@ -262,7 +302,7 @@ export default function SLOPage() {
     }
     
     bulkImportSLOs(parsedSLOs)
-    toast.success(`Successfully imported and committed ${finalRows.length} SLO records!`)
+    toast.success(`Successfully imported and committed ${parsedSLOs.length} SLO records!`)
     setShowBulkModal(false)
     setBulkText('')
     setParsedSLOs([])
@@ -274,10 +314,11 @@ export default function SLOPage() {
       toast.error('No curriculum entries match the active filters to export!')
       return
     }
-    const headers = ['Outcome Code', 'Description', 'Subject', 'Curriculum Unit', 'NCP Alignment', 'Status']
+    const headers = ['Outcome Code', 'Description', 'Class', 'Subject', 'Curriculum Unit', 'NCP Alignment', 'Status']
     const csvRows = filtered.map(slo => [
       slo.id,
       `"${slo.description.replace(/"/g, '""')}"`,
+      slo.class,
       slo.subject,
       slo.chapter,
       slo.ncp,
@@ -289,7 +330,7 @@ export default function SLOPage() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', `SLO_Curriculum_${subjectFilter}_${chapterFilter}.csv`)
+    link.setAttribute('download', `SLO_Curriculum_${classFilter}_${subjectFilter}_${chapterFilter}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -347,8 +388,8 @@ export default function SLOPage() {
           {activeTab === 'registry' && (
             <div className="space-y-6">
               <div className="bg-background/50 backdrop-blur-md border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="relative lg:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="relative lg:col-span-2 md:col-span-2">
                     <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <input
                       value={search}
@@ -357,6 +398,18 @@ export default function SLOPage() {
                       className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl sm:rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     />
                   </div>
+
+                  <Select value={classFilter} onValueChange={setClassFilter}>
+                    <SelectTrigger className="h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
+                      <div className="flex items-center gap-2">
+                        <Filter size={14} className="text-primary" />
+                        <SelectValue placeholder="Class" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classesFilterOptions.map(c => <SelectItem key={c} value={c}>{c === 'All' ? 'All Classes' : `Class ${c}`}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
 
                   <Select value={subjectFilter} onValueChange={setSubjectFilter}>
                     <SelectTrigger className="h-12 rounded-xl sm:rounded-2xl border-border bg-background shadow-inner">
@@ -390,7 +443,7 @@ export default function SLOPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-muted/50 border-b border-border">
-                        {['Outcome Code', 'Objective Description', 'Subject', 'Curriculum Unit', 'NCP Alignment', 'Status'].map(h => (
+                        {['Outcome Code', 'Objective Description', 'Class', 'Subject', 'Curriculum Unit', 'NCP Alignment', 'Status'].map(h => (
                           <th key={h} className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">{h}</th>
                         ))}
                       </tr>
@@ -403,6 +456,11 @@ export default function SLOPage() {
                              <div className="max-w-md">
                                <span className="text-sm font-bold text-foreground leading-snug">{slo.description}</span>
                              </div>
+                          </td>
+                          <td className="px-6 py-5">
+                             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-black uppercase tracking-widest px-3 py-1">
+                               Class {slo.class}
+                             </Badge>
                           </td>
                           <td className="px-6 py-5">
                              <Badge variant="secondary" className="bg-muted text-foreground border-border text-[10px] font-black uppercase tracking-widest px-3 py-1">
@@ -438,7 +496,13 @@ export default function SLOPage() {
                     
                     <p className="text-sm font-bold text-foreground leading-relaxed">{slo.description}</p>
                     
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                    <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border/50">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Class</p>
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                          {slo.class}
+                        </Badge>
+                      </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Subject</p>
                         <Badge variant="secondary" className="bg-muted text-foreground border-border text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
@@ -542,7 +606,18 @@ export default function SLOPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Class</label>
+                    <Select value={singleSlo.class} onValueChange={val => setSingleSlo({...singleSlo, class: val})}>
+                      <SelectTrigger className="w-full h-11 rounded-xl sm:rounded-2xl shadow-inner bg-background border-border text-sm font-medium">
+                        <SelectValue placeholder="Select Class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['10-A', '10-B', '9-A', '9-B', '8-A', '7-B'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Subject</label>
                     <Select value={singleSlo.subject} onValueChange={val => setSingleSlo({...singleSlo, subject: val})}>
@@ -559,7 +634,7 @@ export default function SLOPage() {
                     <input 
                       value={singleSlo.chapter}
                       onChange={e => setSingleSlo({...singleSlo, chapter: e.target.value})}
-                      placeholder="e.g. Chapter 1: Poetry" 
+                      placeholder="e.g. Chapter 1" 
                       className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium shadow-inner" 
                     />
                   </div>
@@ -675,7 +750,7 @@ export default function SLOPage() {
                       setBulkText(e.target.value)
                       handleParseBulk(e.target.value)
                     }}
-                    placeholder="Example Format (Tab-separated columns from Excel):&#13;SLO-105	Students can analyze thermal properties	Science	Chapter 1	NCP-SCI-121&#13;SLO-106	Students can solve algebraic limits	Mathematics	Chapter 2	NCP-MAT-116"
+                    placeholder="Example Format (Tab-separated columns from Excel):&#13;SLO-105	Students can analyze thermal properties	Science	Chapter 1	10-A	NCP-SCI-121&#13;SLO-106	Students can solve algebraic limits	Mathematics	Chapter 2	9-A	NCP-MAT-116"
                     className="w-full px-4 py-3 border border-border rounded-xl sm:rounded-2xl bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono resize-none shadow-inner h-[120px] placeholder:font-sans leading-relaxed"
                   />
                 </div>
@@ -695,6 +770,7 @@ export default function SLOPage() {
                             <th className="p-2.5">Description</th>
                             <th className="p-2.5">Subject</th>
                             <th className="p-2.5">Chapter</th>
+                            <th className="p-2.5">Class</th>
                             <th className="p-2.5">NCP</th>
                           </tr>
                         </thead>
@@ -705,6 +781,7 @@ export default function SLOPage() {
                               <td className="p-2.5 truncate max-w-[150px] font-semibold text-foreground">{row.description}</td>
                               <td className="p-2.5"><span className="px-1.5 py-0.5 rounded bg-muted border text-[9px] font-bold text-foreground">{row.subject}</span></td>
                               <td className="p-2.5 text-muted-foreground font-medium">{row.chapter}</td>
+                              <td className="p-2.5 text-muted-foreground font-medium">{row.class}</td>
                               <td className="p-2.5 font-mono text-[9px] text-muted-foreground/60">{row.ncp}</td>
                             </tr>
                           ))}
