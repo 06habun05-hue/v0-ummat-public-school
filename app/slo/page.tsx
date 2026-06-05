@@ -106,6 +106,82 @@ export default function SLOPage() {
     setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', class: '10-A', description: '', ncp: '', ncpDesc: '' })
   }
 
+  // Unified SLO record normalization and cleaning pipeline
+  const normalizeSLORecord = (
+    id: string,
+    description: string,
+    subject: string,
+    chapter: string,
+    cls: string,
+    ncp: string,
+    fallbackIndex: number
+  ): SLO => {
+    const cleanString = (val: string) => {
+      if (!val) return ''
+      return String(val).trim().replace(/^"|"$/g, '').trim()
+    }
+
+    const cleanId = cleanString(id).toUpperCase() || `SLO-${String(sloList.length + fallbackIndex + 1).padStart(3, '0')}`
+    const cleanDesc = cleanString(description) || 'Imported learning objective description'
+    const cleanSubjectRaw = cleanString(subject)
+    const cleanChapterRaw = cleanString(chapter)
+    const cleanClassRaw = cleanString(cls)
+    const cleanNcp = cleanString(ncp).toUpperCase() || 'NCP-GENERIC'
+
+    // Normalize subject (case-insensitive search)
+    let parsedSubject = 'English'
+    const matchedSubject = curriculumSubjects.find(
+      (s) => s.toLowerCase() === cleanSubjectRaw.toLowerCase()
+    )
+    if (matchedSubject) {
+      parsedSubject = matchedSubject
+    } else if (subjectFilter !== 'All' && curriculumSubjects.includes(subjectFilter)) {
+      parsedSubject = subjectFilter
+    }
+
+    // Normalize chapter (case-insensitive search)
+    let parsedChapter = 'Chapter 1'
+    const matchedChapter = curriculumChapters.find(
+      (c) => c.toLowerCase() === cleanChapterRaw.toLowerCase()
+    )
+    if (matchedChapter) {
+      parsedChapter = matchedChapter
+    } else if (cleanChapterRaw) {
+      const numMatch = cleanChapterRaw.match(/\d+/)
+      if (numMatch) {
+        const potentialChapter = `Chapter ${numMatch[0]}`
+        const matchedChapterByNum = curriculumChapters.find(
+          (c) => c.toLowerCase() === potentialChapter.toLowerCase()
+        )
+        if (matchedChapterByNum) {
+          parsedChapter = matchedChapterByNum
+        }
+      }
+    } else if (chapterFilter !== 'All' && curriculumChapters.includes(chapterFilter)) {
+      parsedChapter = chapterFilter
+    }
+
+    // Normalize class (case-insensitive search)
+    let parsedClass = '10-A'
+    const matchedClass = classesFilterOptions.find(
+      (c) => c.toLowerCase() === cleanClassRaw.toLowerCase() && c !== 'All'
+    )
+    if (matchedClass) {
+      parsedClass = matchedClass
+    } else if (classFilter !== 'All' && classesFilterOptions.includes(classFilter)) {
+      parsedClass = classFilter
+    }
+
+    return {
+      id: cleanId,
+      description: cleanDesc,
+      subject: parsedSubject,
+      chapter: parsedChapter,
+      class: parsedClass,
+      ncp: cleanNcp
+    }
+  }
+
   // Smart Multi-Delimiter spreadsheet copy-paste parser
   const handleParseBulk = (text: string) => {
     if (!text.trim()) {
@@ -143,32 +219,32 @@ export default function SLOPage() {
       }
       
       if (cols[0] || cols[1]) {
-        const generatedId = `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
-        const idVal = cols[0]?.trim() || generatedId
-        const val4 = cols[4]?.trim().replace(/^"|"$/g, '') || ''
-        const val5 = cols[5]?.trim().replace(/^"|"$/g, '') || ''
-        let parsedClass = '10-A'
-        let parsedNcp = 'NCP-GENERIC'
+        const val4 = cols[4] || ''
+        const val5 = cols[5] || ''
+        let rawClass = ''
+        let rawNcp = ''
         
         if (val5) {
-          parsedClass = val4 || '10-A'
-          parsedNcp = val5 || 'NCP-GENERIC'
+          rawClass = val4
+          rawNcp = val5
         } else if (val4) {
           if (val4.toUpperCase().startsWith('NCP')) {
-            parsedNcp = val4
+            rawNcp = val4
           } else {
-            parsedClass = val4
+            rawClass = val4
           }
         }
 
-        rows.push({
-          id: idVal.toUpperCase().replace(/^"|"$/g, ''),
-          description: cols[1]?.trim().replace(/^"|"$/g, '') || 'Imported learning objective description',
-          subject: cols[2]?.trim().replace(/^"|"$/g, '') || 'English',
-          chapter: cols[3]?.trim().replace(/^"|"$/g, '') || 'Chapter 1',
-          class: parsedClass,
-          ncp: parsedNcp
-        })
+        const normalized = normalizeSLORecord(
+          cols[0] || '',
+          cols[1] || '',
+          cols[2] || '',
+          cols[3] || '',
+          rawClass,
+          rawNcp,
+          rows.length
+        )
+        rows.push(normalized)
       }
     })
     setParsedSLOs(rows)
@@ -200,8 +276,15 @@ export default function SLOPage() {
 
     reader.onload = (event) => {
       try {
-        const data = new Uint8Array(event.target?.result as ArrayBuffer)
-        const workbook = XLSX.read(data, { type: 'array' })
+        let workbook
+        if (isCSV) {
+          const text = event.target?.result as string
+          workbook = XLSX.read(text, { type: 'string' })
+        } else {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer)
+          workbook = XLSX.read(data, { type: 'array' })
+        }
+
         const sheetName = workbook.SheetNames[0]
         const sheet = workbook.Sheets[sheetName]
         if (!sheet) {
@@ -266,21 +349,26 @@ export default function SLOPage() {
             continue
           }
 
-          const idValRaw = String(row[colIndex.id] || '').trim()
-          const descVal = String(row[colIndex.description] || '').trim()
+          const rawId = String(row[colIndex.id] || '').trim()
+          const rawDesc = String(row[colIndex.description] || '').trim()
           
-          if (!idValRaw && !descVal) continue
+          if (!rawId && !rawDesc) continue
 
-          const idVal = idValRaw || `SLO-${String(sloList.length + rows.length + 1).padStart(3, '0')}`
+          const rawSubject = String(row[colIndex.subject] || '').trim()
+          const rawChapter = String(row[colIndex.chapter] || '').trim()
+          const rawClass = colIndex.class !== -1 ? String(row[colIndex.class] || '').trim() : ''
+          const rawNcp = colIndex.ncp !== -1 ? String(row[colIndex.ncp] || '').trim() : ''
 
-          rows.push({
-            id: idVal.toUpperCase(),
-            description: descVal || 'Imported curriculum outcomes',
-            subject: String(row[colIndex.subject] || 'English').trim(),
-            chapter: String(row[colIndex.chapter] || 'Chapter 1').trim(),
-            class: colIndex.class !== -1 ? String(row[colIndex.class] || '10-A').trim() : '10-A',
-            ncp: colIndex.ncp !== -1 ? String(row[colIndex.ncp] || 'NCP-GENERIC').trim() : 'NCP-GENERIC'
-          })
+          const normalized = normalizeSLORecord(
+            rawId,
+            rawDesc,
+            rawSubject,
+            rawChapter,
+            rawClass,
+            rawNcp,
+            rows.length
+          )
+          rows.push(normalized)
         }
 
         setParsedSLOs(rows)
@@ -291,7 +379,11 @@ export default function SLOPage() {
       }
     }
 
-    reader.readAsArrayBuffer(file)
+    if (isCSV) {
+      reader.readAsText(file)
+    } else {
+      reader.readAsArrayBuffer(file)
+    }
   }
 
   // Commit imported rows to active database
