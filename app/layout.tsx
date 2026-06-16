@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Shell } from '@/components/layout/shell'
+import { ReactQueryProvider } from '@/components/providers/react-query-provider'
 import './globals.css'
 
 const _geist = Geist({ 
@@ -42,6 +43,8 @@ export const metadata: Metadata = {
 }
 
 import { PageTransition } from '@/components/layout/page-transition'
+import { StackProvider, StackTheme } from '@stackframe/stack'
+import { stackServerApp } from '@/lib/stack'
 
 export default function RootLayout({
   children,
@@ -54,11 +57,17 @@ export default function RootLayout({
       className={`${_geist.variable} ${_geistMono.variable} ${_plusJakarta.variable} bg-background`}
     >
       <body className="font-sans antialiased text-foreground overflow-hidden scrollbar-hide">
-        <Shell>
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </Shell>
+        <StackProvider app={stackServerApp}>
+          <StackTheme>
+            <ReactQueryProvider>
+              <Shell>
+                <PageTransition>
+                  {children}
+                </PageTransition>
+              </Shell>
+            </ReactQueryProvider>
+          </StackTheme>
+        </StackProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -1,19 +1,6 @@
 import { create } from 'zustand'
 
-export type UserRole = 'SUPER_ADMIN' | 'BRANCH_ADMIN' | 'ACCOUNTANT' | 'TEACHER'
-
-export interface UserProfile {
-  name: string
-  avatar: string
-  email: string
-}
-
-export const ROLE_USER_PRESETS: Record<UserRole, UserProfile> = {
-  SUPER_ADMIN: { name: 'John Doe', avatar: 'JD', email: 'john.doe@ummat.edu' },
-  BRANCH_ADMIN: { name: 'Admin Khalid', avatar: 'AK', email: 'khalid@ummat.edu' },
-  ACCOUNTANT: { name: 'Accountant Sara', avatar: 'AS', email: 'sara@ummat.edu' },
-  TEACHER: { name: 'Ms. Sana Malik', avatar: 'SM', email: 'sana@ummat.edu' },
-}
+export type UserRole = 'SUPER_ADMIN' | 'BRANCH_ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'COORDINATOR' | 'PRINCIPAL'
 
 interface UIStore {
   selectedBranch: string
@@ -22,6 +9,7 @@ interface UIStore {
   setSidebarCollapsed: (v: boolean) => void
   isDarkMode: boolean
   toggleDarkMode: () => void
+  
   role: UserRole
   setRole: (role: UserRole) => void
   userName: string
@@ -29,6 +17,7 @@ interface UIStore {
   userEmail: string
   isAuthenticated: boolean
   setIsAuthenticated: (v: boolean) => void
+  setAuthDetails: (details: { role: UserRole, name: string, email: string, avatar: string, isAuthenticated: boolean }) => void
   logout: () => void
 }
 
@@ -39,24 +28,29 @@ export const useUIStore = create<UIStore>((set) => ({
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
   isDarkMode: false,
   toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
+  
   role: 'SUPER_ADMIN',
-  userName: ROLE_USER_PRESETS.SUPER_ADMIN.name,
-  userAvatar: ROLE_USER_PRESETS.SUPER_ADMIN.avatar,
-  userEmail: ROLE_USER_PRESETS.SUPER_ADMIN.email,
-  setRole: (role) => set({ 
-    role,
-    userName: ROLE_USER_PRESETS[role].name,
-    userAvatar: ROLE_USER_PRESETS[role].avatar,
-    userEmail: ROLE_USER_PRESETS[role].email,
-  }),
+  userName: '',
+  userAvatar: '',
+  userEmail: '',
   isAuthenticated: false,
+  
+  setRole: (role) => set({ role }),
   setIsAuthenticated: (v) => set({ isAuthenticated: v }),
-  logout: () => set({ 
-    isAuthenticated: false, 
-    role: 'SUPER_ADMIN',
-    userName: ROLE_USER_PRESETS.SUPER_ADMIN.name,
-    userAvatar: ROLE_USER_PRESETS.SUPER_ADMIN.avatar,
-    userEmail: ROLE_USER_PRESETS.SUPER_ADMIN.email,
+  setAuthDetails: (details) => set({
+    role: details.role,
+    userName: details.name,
+    userEmail: details.email,
+    userAvatar: details.avatar,
+    isAuthenticated: details.isAuthenticated
   }),
+  logout: () => {
+    // Local state clear; real sign out should happen via Stack Auth client
+    set({ 
+      isAuthenticated: false,
+      userName: '',
+      userEmail: '',
+      userAvatar: ''
+    })
+  },
 }))
-

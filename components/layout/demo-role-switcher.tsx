@@ -52,7 +52,11 @@ export function DemoRoleSwitcher() {
   const { role, setRole } = useUIStore()
   const [open, setOpen] = useState(false)
   const current = rolesConfig[role]
-  const CurrentIcon = current.icon
+  const CurrentIcon = current?.icon || Shield
+
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
 
   return (
     <div className="relative">
