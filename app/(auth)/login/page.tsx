@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { SignIn } from '@stackframe/stack'
+import { AuthView } from '@neondatabase/neon-js/auth/react/ui'
 
 export default function LoginPage() {
   return (
@@ -48,7 +48,7 @@ export default function LoginPage() {
             <h1 className="text-2xl font-heading font-black text-foreground tracking-tight">Ummat</h1>
           </div>
 
-          <SignIn fullPage />
+          <AuthView />
         </div>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { useUser } from '@stackframe/stack'
+import { useAuthData } from '@neondatabase/neon-js/auth/react/ui'
 import { useUIStore, UserRole } from '@/lib/store/ui-store'
 
 export function useSession() {
-  const user = useUser()
+  const user = useAuthData()
   const { setAuthDetails } = useUIStore()
 
   useEffect(() => {
@@ -17,9 +17,9 @@ export function useSession() {
         setAuthDetails({
           isAuthenticated: true,
           role: role,
-          name: user.displayName || 'Stack User',
-          email: user.primaryEmail || '',
-          avatar: user.profileImageUrl || '',
+          name: user.name || 'Neon User',
+          email: user.email || '',
+          avatar: user.avatar || '',
         })
       } else {
         setAuthDetails({
