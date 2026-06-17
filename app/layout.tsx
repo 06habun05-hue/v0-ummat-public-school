@@ -5,6 +5,9 @@ import { Shell } from '@/components/layout/shell'
 import { ReactQueryProvider } from '@/components/providers/react-query-provider'
 import './globals.css'
 
+// All pages in this app are authenticated and user-specific; disable static prerendering
+export const dynamic = 'force-dynamic'
+
 const _geist = Geist({ 
   subsets: ["latin"],
   variable: '--font-sans',
