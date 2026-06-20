@@ -1,3 +1,5 @@
+"use client"
+
 import Image from 'next/image'
 import { AuthView } from '@neondatabase/neon-js/auth/react/ui'
 

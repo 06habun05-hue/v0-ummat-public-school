@@ -61,7 +61,7 @@ export default function RootLayout({
       className={`${_geist.variable} ${_geistMono.variable} ${_plusJakarta.variable} bg-background`}
     >
       <body className="font-sans antialiased text-foreground overflow-hidden scrollbar-hide">
-        <NeonAuthUIProvider client={neonAuthClient}>
+        <NeonAuthUIProvider authClient={neonAuthClient}>
             <ReactQueryProvider>
               <Shell>
                 <PageTransition>
