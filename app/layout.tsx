@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 }
 
 import { PageTransition } from '@/components/layout/page-transition'
-import { NeonAuthUIProvider } from '@neondatabase/neon-js/auth/react/ui'
+import { NeonAuthUIProvider } from '@/components/providers/neon-auth-provider'
 import '@neondatabase/neon-js/ui/css'
 import { neonAuthClient } from '@/lib/auth'
 
