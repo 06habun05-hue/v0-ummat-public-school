@@ -1,16 +1,15 @@
 "use client"
 
 import { NeonAuthUIProvider as BaseNeonAuthUIProvider } from '@neondatabase/neon-js/auth/react/ui'
+import { neonAuthClient } from '@/lib/auth'
 
 export function NeonAuthUIProvider({ 
-  children, 
-  authClient 
+  children
 }: { 
   children: React.ReactNode
-  authClient: any 
 }) {
   return (
-    <BaseNeonAuthUIProvider authClient={authClient}>
+    <BaseNeonAuthUIProvider authClient={neonAuthClient}>
       {children}
     </BaseNeonAuthUIProvider>
   )
