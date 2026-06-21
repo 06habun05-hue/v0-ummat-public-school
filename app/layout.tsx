@@ -46,8 +46,6 @@ export const metadata: Metadata = {
 }
 
 import { PageTransition } from '@/components/layout/page-transition'
-import { NeonAuthUIProvider } from '@/components/providers/neon-auth-provider'
-import '@neondatabase/neon-js/ui/css'
 
 export default function RootLayout({
   children,
@@ -60,15 +58,13 @@ export default function RootLayout({
       className={`${_geist.variable} ${_geistMono.variable} ${_plusJakarta.variable} bg-background`}
     >
       <body className="font-sans antialiased text-foreground overflow-hidden scrollbar-hide">
-        <NeonAuthUIProvider>
-            <ReactQueryProvider>
-              <Shell>
-                <PageTransition>
-                  {children}
-                </PageTransition>
-              </Shell>
-            </ReactQueryProvider>
-        </NeonAuthUIProvider>
+        <ReactQueryProvider>
+          <Shell>
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </Shell>
+        </ReactQueryProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
