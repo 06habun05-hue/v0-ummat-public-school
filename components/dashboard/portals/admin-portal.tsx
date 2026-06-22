@@ -160,11 +160,11 @@ export function AdminPortal() {
       {/* KPI Cards — real data */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total Students',    value: kpisLoading ? '…' : String(kpis?.totalStudents ?? 0),         icon: Users,        trend: { percentage: 12, isPositive: true  } },
-          { label: 'Total Teachers',    value: kpisLoading ? '…' : String(kpis?.totalTeachers ?? 0),         icon: BookOpen,     trend: { percentage: 5,  isPositive: true  } },
-          { label: 'Attendance Rate',   value: kpisLoading ? '…' : `${kpis?.attendanceRate ?? '0.0'}%`,      icon: CheckCircle2, trend: { percentage: 3,  isPositive: true  } },
-          { label: 'Pending Approvals', value: kpisLoading ? '…' : String(kpis?.pendingApprovals ?? 0),      icon: AlertCircle,  trend: { percentage: 8,  isPositive: false } },
-          { label: 'Fee Collection',    value: kpisLoading ? '…' : `${kpis?.feeCollectionRate ?? '0.0'}%`,   icon: CreditCard,   trend: { percentage: 6,  isPositive: true  } },
+          { label: 'Total Students',    value: kpisLoading ? '…' : String(kpis?.totalStudents ?? 0),         icon: Users        },
+          { label: 'Total Teachers',    value: kpisLoading ? '…' : String(kpis?.totalTeachers ?? 0),         icon: BookOpen     },
+          { label: 'Attendance Rate',   value: kpisLoading ? '…' : `${kpis?.attendanceRate ?? '0.0'}%`,      icon: CheckCircle2 },
+          { label: 'Pending Approvals', value: kpisLoading ? '…' : String(kpis?.pendingApprovals ?? 0),      icon: AlertCircle  },
+          { label: 'Fee Collection',    value: kpisLoading ? '…' : `${kpis?.feeCollectionRate ?? '0.0'}%`,   icon: CreditCard   },
         ].map((card, i) => (
           <motion.div
             key={card.label}
@@ -172,7 +172,7 @@ export function AdminPortal() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <MetricCard label={card.label} value={card.value} icon={card.icon} trend={card.trend} />
+            <MetricCard label={card.label} value={card.value} icon={card.icon} />
           </motion.div>
         ))}
       </div>

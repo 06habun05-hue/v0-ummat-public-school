@@ -189,15 +189,6 @@ export default function AdminPage() {
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">Admin Control Center</h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">Manage users, branches, and system settings</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-          <div className="px-3 sm:px-4 py-2 bg-background border border-border rounded-xl sm:rounded-2xl shadow-sm flex items-center gap-3">
-            <div className="flex flex-col items-end">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">System Health</span>
-              <span className="text-[10px] sm:text-xs font-bold text-emerald-500 mt-1">Operational</span>
-            </div>
-            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-        </motion.div>
       </div>
 
       {/* Tabs */}
@@ -631,10 +622,6 @@ export default function AdminPage() {
                   <CardDescription className="text-[9px] font-bold uppercase tracking-tight">Storage & cloud sync</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-border/30">
-                    <span className="text-[11px] font-medium text-muted-foreground">Sync Status</span>
-                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Operational</span>
-                  </div>
                   <div className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                     <span className="text-[11px] font-medium text-muted-foreground">Last Backup</span>
                     <span className="text-[9px] font-black text-foreground uppercase tracking-widest">
