@@ -67,16 +67,7 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily')
   const [searchQuery, setSearchQuery] = useState('')
   const [students, setStudents] = useState<StudentAttendance[]>(
-    initialStudents.length > 0 ? initialStudents : [
-      { id: '1', name: 'Ahmed Hassan',  status: null, history: { Mon: 'present', Tue: 'present', Wed: 'late',    Thu: 'present', Fri: null } },
-      { id: '2', name: 'Fatima Khan',   status: null, history: { Mon: 'present', Tue: 'present', Wed: 'present', Thu: 'present', Fri: null } },
-      { id: '3', name: 'Muhammad Ali',  status: null, history: { Mon: 'absent',  Tue: 'present', Wed: 'present', Thu: 'absent',  Fri: null } },
-      { id: '4', name: 'Zainab Ahmed',  status: null, history: { Mon: 'present', Tue: 'late',    Wed: 'present', Thu: 'present', Fri: null } },
-      { id: '5', name: 'Hassan Ibrahim',status: null, history: { Mon: 'present', Tue: 'present', Wed: 'present', Thu: 'present', Fri: null } },
-      { id: '6', name: 'Aisha Mohammed',status: null, history: { Mon: 'present', Tue: 'present', Wed: 'present', Thu: 'present', Fri: null } },
-      { id: '7', name: 'Omar Ahmed',    status: null, history: { Mon: 'late',    Tue: 'present', Wed: 'present', Thu: 'present', Fri: null } },
-      { id: '8', name: 'Layla Hassan',  status: null, history: { Mon: 'present', Tue: 'present', Wed: 'present', Thu: 'present', Fri: null } },
-    ]
+    initialStudents.length > 0 ? initialStudents : []
   )
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']

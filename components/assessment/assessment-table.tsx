@@ -53,13 +53,7 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
   const { filters, gradesData, updateSingleGrade, clearGrades, setGradesData, saveStatus, setSaveStatus } = useAssessmentStore()
   const key = getGradesKey(filters.branch, filters.class, filters.subject, filters.chapter)
   
-  const defaultStudents = [
-    { id: '1', name: 'Ahmed Hassan' },
-    { id: '2', name: 'Fatima Khan' },
-    { id: '3', name: 'Muhammad Ali' },
-    { id: '4', name: 'Zainab Ahmed' },
-    { id: '5', name: 'Hassan Ibrahim' },
-  ]
+  const defaultStudents: StudentAssessment[] = []
   
   const data = gradesData[key] || defaultStudents
 

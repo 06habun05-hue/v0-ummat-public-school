@@ -40,19 +40,9 @@ export default function AssessmentPage() {
       return
     }
     const headers = ['Student ID', 'Student Name', ...activeSLOs.map(s => s.id)]
-    const mockStudents = [
-      { id: 'STU001', name: 'Ahmed Hassan' },
-      { id: 'STU002', name: 'Fatima Khan' },
-      { id: 'STU003', name: 'Muhammad Ali' },
-      { id: 'STU004', name: 'Zainab Ahmed' },
-      { id: 'STU005', name: 'Hassan Ibrahim' }
-    ]
-    const csvRows = mockStudents.map((student, idx) => [
-      student.id,
-      student.name,
-      ...activeSLOs.map((_, sIdx) => (idx + sIdx) % 4 + 1)
-    ])
-    const csvContent = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n')
+    
+    // Exporting an empty template with headers
+    const csvContent = headers.join(',')
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -62,7 +52,7 @@ export default function AssessmentPage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    toast.success(`Exported ${filters.class} assessment sheet successfully!`)
+    toast.success(`Exported ${filters.class} assessment sheet template successfully!`)
   }
 
   return (
