@@ -14,7 +14,7 @@ const attendanceTrendOpts = {
   grid: { top: 15, right: 10, bottom: 30, left: 45 },
   xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], axisTick: { show: false }, axisLabel: { fontSize: 10 } },
   yAxis: { type: 'value', min: 80, max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } }, axisLabel: { fontSize: 11 } },
-  series: [{ type: 'line', smooth: true, data: [95, 96, 94, 97, 96.4], lineStyle: { color: '#2A7A30', width: 2.5 }, itemStyle: { color: '#2A7A30' }, areaStyle: { color: '#2A7A3015' } }],
+  series: [{ type: 'line', smooth: true, data: [0, 0, 0, 0, 0], lineStyle: { color: '#2A7A30', width: 2.5 }, itemStyle: { color: '#2A7A30' }, areaStyle: { color: '#2A7A3015' } }],
 }
 
 const sloMasteryOpts = {
@@ -22,14 +22,10 @@ const sloMasteryOpts = {
   grid: { top: 15, right: 10, bottom: 30, left: 45 },
   xAxis: { type: 'category', data: ['Ch 1', 'Ch 2', 'Ch 3', 'Ch 4', 'Ch 5'], axisTick: { show: false }, axisLabel: { fontSize: 11 } },
   yAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } }, axisLabel: { fontSize: 11 } },
-  series: [{ type: 'bar', data: [90, 85, 78, 92, 80], itemStyle: { color: '#2A7A30', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 24 }],
+  series: [{ type: 'bar', data: [0, 0, 0, 0, 0], itemStyle: { color: '#2A7A30', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 24 }],
 }
 
-const recentGrading = [
-  { student: 'Ahmed Hassan', class: '10-A', subject: 'English', detail: 'SLO-001 · Exceeded Expectation', time: '10m ago' },
-  { student: 'Fatima Khan', class: '10-A', subject: 'English', detail: 'SLO-001 · Met Expectation', time: '15m ago' },
-  { student: 'Zainab Ahmed', class: '10-B', subject: 'English', detail: 'SLO-002 · Met Expectation', time: '1h ago' },
-]
+const recentGrading: any[] = []
 
 export function TeacherPortal() {
   const { selectedBranch } = useUIStore()
@@ -96,10 +92,10 @@ export function TeacherPortal() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "My Classes", value: "4 Sections", icon: Users, trend: { percentage: 0, isPositive: true } },
-          { label: "Class Attendance", value: "96.4%", icon: CheckCircle2, trend: { percentage: 2, isPositive: true } },
-          { label: "SLOs Mapped", value: "18 Chapters", icon: BookOpen, trend: { percentage: 10, isPositive: true } },
-          { label: "Pending Reviews", value: "3 Grades", icon: AlertCircle, trend: { percentage: 0, isPositive: false } }
+          { label: "My Classes", value: "0 Sections", icon: Users, trend: { percentage: 0, isPositive: true } },
+          { label: "Class Attendance", value: "0%", icon: CheckCircle2, trend: { percentage: 0, isPositive: true } },
+          { label: "SLOs Mapped", value: "0 Chapters", icon: BookOpen, trend: { percentage: 0, isPositive: true } },
+          { label: "Pending Reviews", value: "0 Grades", icon: AlertCircle, trend: { percentage: 0, isPositive: false } }
         ].map((card, i) => (
           <motion.div
             key={card.label}

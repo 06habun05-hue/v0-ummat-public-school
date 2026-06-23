@@ -16,7 +16,7 @@ const monthlyRevenueOpts = {
   xAxis: { type: 'category', data: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], axisTick: { show: false }, axisLabel: { fontSize: 10 } },
   yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f0f0f0' } }, axisLabel: { formatter: (v: number) => `${v / 1000}k`, fontSize: 11 } },
   series: [
-    { name: 'Collected', type: 'bar', data: [180000, 195000, 172000, 210000, 145000], itemStyle: { color: '#2A7A30', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 24 }
+    { name: 'Collected', type: 'bar', data: [0, 0, 0, 0, 0], itemStyle: { color: '#2A7A30', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 24 }
   ],
 }
 
@@ -26,18 +26,14 @@ const feeHealthOpts = {
     type: 'pie', radius: ['55%', '80%'], avoidLabelOverlap: false,
     label: { show: false },
     data: [
-      { value: 80, name: 'Collected', itemStyle: { color: '#2A7A30' } },
-      { value: 12, name: 'Pending',   itemStyle: { color: '#F59E0B' } },
-      { value: 8,  name: 'Overdue',   itemStyle: { color: '#CC1E1E' } },
+      { value: 0, name: 'Collected', itemStyle: { color: '#2A7A30' } },
+      { value: 0, name: 'Pending',   itemStyle: { color: '#F59E0B' } },
+      { value: 0, name: 'Overdue',   itemStyle: { color: '#CC1E1E' } },
     ],
   }],
 }
 
-const recentPayments = [
-  { student: 'Ahmed Hassan', id: 'STU001', amount: 'PKR 15,000', detail: 'Fee Settlement · 10-A', time: '5m ago', type: 'Paid' },
-  { student: 'Fatima Khan', id: 'STU002', amount: 'PKR 15,000', detail: 'Fee Settlement · 10-A', time: '20m ago', type: 'Paid' },
-  { student: 'Hassan Ibrahim', id: 'STU005', amount: 'PKR 5,000', detail: 'Partial Payment · 8-A', time: '2h ago', type: 'Partial' },
-]
+const recentPayments: any[] = []
 
 export function AccountantPortal() {
   const { selectedBranch } = useUIStore()
@@ -109,10 +105,10 @@ export function AccountantPortal() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Collected", value: "PKR 145k", icon: Wallet, trend: { percentage: 12, isPositive: true } },
-          { label: "Pending Fees", value: "PKR 37k", icon: AlertCircle, trend: { percentage: 5, isPositive: false } },
-          { label: "Collection Rate", value: "80.0%", icon: TrendingUp, trend: { percentage: 6, isPositive: true } },
-          { label: "Overdue Profiles", value: "3 Students", icon: AlertCircle, trend: { percentage: 0, isPositive: false } }
+          { label: "Total Collected", value: "PKR 0", icon: Wallet, trend: { percentage: 0, isPositive: true } },
+          { label: "Pending Fees", value: "PKR 0", icon: AlertCircle, trend: { percentage: 0, isPositive: false } },
+          { label: "Collection Rate", value: "0%", icon: TrendingUp, trend: { percentage: 0, isPositive: true } },
+          { label: "Overdue Profiles", value: "0 Students", icon: AlertCircle, trend: { percentage: 0, isPositive: false } }
         ].map((card, i) => (
           <motion.div
             key={card.label}
