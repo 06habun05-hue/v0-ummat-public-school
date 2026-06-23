@@ -15,8 +15,8 @@ const branchComparisonOpts = {
   xAxis: { type: 'category', data: ['Main Campus', 'North Campus', 'South Campus'], axisTick: { show: false } },
   yAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } } },
   series: [
-    { name: 'Avg Score', type: 'bar', data: [82, 78, 75], itemStyle: { color: '#2A7A30', borderRadius: [4,4,0,0] } },
-    { name: 'Attendance %', type: 'bar', data: [94, 91, 88], itemStyle: { color: '#2A7A3055', borderRadius: [4,4,0,0] } },
+    { name: 'Avg Score', type: 'bar', data: [0, 0, 0], itemStyle: { color: '#2A7A30', borderRadius: [4,4,0,0] } },
+    { name: 'Attendance %', type: 'bar', data: [0, 0, 0], itemStyle: { color: '#2A7A3055', borderRadius: [4,4,0,0] } },
   ],
 }
 
@@ -27,8 +27,8 @@ const monthlyTrendOpts = {
   xAxis: { type: 'category', data: ['Jan','Feb','Mar','Apr','May'], axisTick: { show: false } },
   yAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } } },
   series: [
-    { name: 'Avg Score', type: 'line', smooth: true, data: [76,79,81,80,83], lineStyle: { color: '#2A7A30', width: 2 }, itemStyle: { color: '#2A7A30' }, areaStyle: { color: '#2A7A3015' } },
-    { name: 'Attendance', type: 'line', smooth: true, data: [91,92,90,93,94], lineStyle: { color: '#CC1E1E', width: 2 }, itemStyle: { color: '#CC1E1E' }, areaStyle: { color: '#CC1E1E10' } },
+    { name: 'Avg Score', type: 'line', smooth: true, data: [0,0,0,0,0], lineStyle: { color: '#2A7A30', width: 2 }, itemStyle: { color: '#2A7A30' }, areaStyle: { color: '#2A7A3015' } },
+    { name: 'Attendance', type: 'line', smooth: true, data: [0,0,0,0,0], lineStyle: { color: '#CC1E1E', width: 2 }, itemStyle: { color: '#CC1E1E' }, areaStyle: { color: '#CC1E1E10' } },
   ],
 }
 
@@ -38,13 +38,13 @@ const heatmapOpts = {
   xAxis: { type: 'category', data: ['English','Math','Science','Soc.Studies','Islamic'], axisTick: { show: false }, axisLabel: { fontSize: 10 } },
   yAxis: { type: 'category', data: ['10-A','10-B','9-A','9-B'], axisLabel: { fontSize: 11 } },
   visualMap: { min: 60, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 12, itemHeight: 80, textStyle: { fontSize: 10 }, inRange: { color: ['#ffebe6','#2A7A30'] } },
-  series: [{ type: 'heatmap', data: [[0,0,85],[0,1,78],[0,2,90],[0,3,82],[0,4,76],[1,0,92],[1,1,88],[1,2,85],[1,3,79],[1,4,91],[2,0,70],[2,1,74],[2,2,68],[2,3,72],[2,4,75],[3,0,88],[3,1,85],[3,2,92],[3,3,87],[3,4,84]], label: { show: true, fontSize: 10 } }],
+  series: [{ type: 'heatmap', data: [], label: { show: true, fontSize: 10 } }],
 }
 
 const radarOpts = {
   tooltip: {},
   radar: { indicator: [{ name:'English',max:100},{ name:'Math',max:100},{ name:'Science',max:100},{ name:'Soc.Studies',max:100},{ name:'Islamic',max:100}], splitNumber: 4, axisName: { fontSize: 11 } },
-  series: [{ type:'radar', data:[{ value:[82,79,85,72,90], name:'Avg', areaStyle:{ color:'#2A7A3030' }, lineStyle:{ color:'#2A7A30' }, itemStyle:{ color:'#2A7A30' } }] }],
+  series: [{ type:'radar', data:[{ value:[0,0,0,0,0], name:'Avg', areaStyle:{ color:'#2A7A3030' }, lineStyle:{ color:'#2A7A30' }, itemStyle:{ color:'#2A7A30' } }] }],
 }
 
 const weakSkillsOpts = {
@@ -52,7 +52,7 @@ const weakSkillsOpts = {
   grid: { top: 10, right: 80, bottom: 10, left: 80 },
   xAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } } },
   yAxis: { type: 'category', data: ['SLO-007','SLO-003','SLO-005','SLO-002','SLO-008'], axisLabel: { fontSize: 11 } },
-  series: [{ type:'bar', data:[55,61,64,68,70], label:{ show:true, position:'right', formatter:'{c}%', fontSize:11 }, itemStyle:{ borderRadius:[0,4,4,0], color: (p: any) => p.data < 65 ? '#CC1E1E' : '#F59E0B' } }],
+  series: [{ type:'bar', data:[], label:{ show:true, position:'right', formatter:'{c}%', fontSize:11 }, itemStyle:{ borderRadius:[0,4,4,0], color: (p: any) => p.data < 65 ? '#CC1E1E' : '#F59E0B' } }],
 }
 
 const weeklyAttendanceOpts = {
@@ -62,9 +62,9 @@ const weeklyAttendanceOpts = {
   xAxis: { type:'category', data:['Week 1','Week 2','Week 3','Week 4','Week 5'], axisTick:{ show:false } },
   yAxis: { type:'value', min:80, max:100, splitLine:{ lineStyle:{ color:'#f0f0f0' } } },
   series: [
-    { name:'Main',  type:'line', smooth:true, data:[93,94,92,95,94], lineStyle:{ color:'#2A7A30' }, itemStyle:{ color:'#2A7A30' } },
-    { name:'North', type:'line', smooth:true, data:[90,91,89,92,91], lineStyle:{ color:'#F59E0B' }, itemStyle:{ color:'#F59E0B' } },
-    { name:'South', type:'line', smooth:true, data:[87,88,86,89,88], lineStyle:{ color:'#CC1E1E' }, itemStyle:{ color:'#CC1E1E' } },
+    { name:'Main',  type:'line', smooth:true, data:[0,0,0,0,0], lineStyle:{ color:'#2A7A30' }, itemStyle:{ color:'#2A7A30' } },
+    { name:'North', type:'line', smooth:true, data:[0,0,0,0,0], lineStyle:{ color:'#F59E0B' }, itemStyle:{ color:'#F59E0B' } },
+    { name:'South', type:'line', smooth:true, data:[0,0,0,0,0], lineStyle:{ color:'#CC1E1E' }, itemStyle:{ color:'#CC1E1E' } },
   ],
 }
 
@@ -74,7 +74,7 @@ const attHeatOpts = {
   xAxis: { type:'category', data:['Mon','Tue','Wed','Thu','Fri','Sat'], axisTick:{ show:false }, axisLabel:{ fontSize:11 } },
   yAxis: { type:'category', data:['10-A','10-B','9-A','9-B'], axisLabel:{ fontSize:11 } },
   visualMap: { min:80, max:100, calculable:true, orient:'horizontal', left:'center', bottom:0, itemWidth:12, itemHeight:100, textStyle:{ fontSize:10 }, inRange:{ color:['#ffebe6','#2A7A30'] } },
-  series: [{ type:'heatmap', data:[[0,0,95],[0,1,93],[0,2,92],[0,3,94],[0,4,91],[0,5,88],[1,0,88],[1,1,90],[1,2,87],[1,3,91],[1,4,89],[1,5,85],[2,0,92],[2,1,94],[2,2,93],[2,3,95],[2,4,92],[2,5,90],[3,0,85],[3,1,87],[3,2,84],[3,3,88],[3,4,86],[3,5,82]], label:{ show:true, fontSize:10, formatter:(p:any)=>`${p.data[2]}%` } }],
+  series: [{ type:'heatmap', data:[], label:{ show:true, fontSize:10, formatter:(p:any)=>`${p.data[2]}%` } }],
 }
 
 const teacherBarOpts = {
@@ -82,7 +82,7 @@ const teacherBarOpts = {
   grid: { top:10, right:10, bottom:50, left:50 },
   xAxis: { type:'category', data:['Ms. Sana','Mr. Tariq','Ms. Ayesha','Mr. Hassan','Ms. Noor'], axisTick:{ show:false }, axisLabel:{ fontSize:10, rotate:10 } },
   yAxis: { type:'value', max:100, splitLine:{ lineStyle:{ color:'#f0f0f0' } } },
-  series: [{ type:'bar', data:[92,85,78,88,95], itemStyle:{ borderRadius:[4,4,0,0], color:(p:any)=>p.data>=90?'#2A7A30':p.data>=80?'#F59E0B':'#CC1E1E' } }],
+  series: [{ type:'bar', data:[], itemStyle:{ borderRadius:[4,4,0,0], color:(p:any)=>p.data>=90?'#2A7A30':p.data>=80?'#F59E0B':'#CC1E1E' } }],
 }
 
 const behavioralOpts = {
@@ -92,26 +92,20 @@ const behavioralOpts = {
   xAxis: { type:'category', data:['Week 1','Week 2','Week 3','Week 4','Week 5'], axisTick:{ show:false } },
   yAxis: { type:'value', min:70, max:100, splitLine:{ lineStyle:{ color:'#f0f0f0' } } },
   series: [
-    { name:'Uniform',     type:'line', smooth:true, data:[88,90,89,91,92], lineStyle:{ color:'#2A7A30' }, itemStyle:{ color:'#2A7A30' } },
-    { name:'Interaction', type:'line', smooth:true, data:[82,84,81,85,83], lineStyle:{ color:'#F59E0B' }, itemStyle:{ color:'#F59E0B' } },
-    { name:'Behavior',    type:'line', smooth:true, data:[91,92,90,93,94], lineStyle:{ color:'#6366F1' }, itemStyle:{ color:'#6366F1' } },
+    { name:'Uniform',     type:'line', smooth:true, data:[0,0,0,0,0], lineStyle:{ color:'#2A7A30' }, itemStyle:{ color:'#2A7A30' } },
+    { name:'Interaction', type:'line', smooth:true, data:[0,0,0,0,0], lineStyle:{ color:'#F59E0B' }, itemStyle:{ color:'#F59E0B' } },
+    { name:'Behavior',    type:'line', smooth:true, data:[0,0,0,0,0], lineStyle:{ color:'#6366F1' }, itemStyle:{ color:'#6366F1' } },
   ],
 }
 
 const kpiCards = [
-  { label:'Total Students', value:'2,458', sub:'+12% this term', icon:Users },
-  { label:'Avg Score', value:'81.4%', sub:'+3.2% vs last term', icon:TrendingUp },
-  { label:'Attendance Rate', value:'92.6%', sub:'+1.8% vs last term', icon:BookOpen },
-  { label:'Active Teachers', value:'124', sub:'Across 3 branches', icon:BarChart3 },
+  { label:'Total Students', value:'0', sub:'0% this term', icon:Users },
+  { label:'Avg Score', value:'0.0%', sub:'0% vs last term', icon:TrendingUp },
+  { label:'Attendance Rate', value:'0.0%', sub:'0% vs last term', icon:BookOpen },
+  { label:'Active Teachers', value:'0', sub:'Across 3 branches', icon:BarChart3 },
 ]
 
-const teacherRows = [
-  { name:'Ms. Sana Malik', classes:4, submitted:18, approvalRate:94, avgScore:88 },
-  { name:'Mr. Tariq Ahmed', classes:3, submitted:15, approvalRate:87, avgScore:82 },
-  { name:'Ms. Ayesha Noor', classes:4, submitted:14, approvalRate:79, avgScore:79 },
-  { name:'Mr. Hassan Raza', classes:3, submitted:17, approvalRate:91, avgScore:85 },
-  { name:'Ms. Noor Fatima', classes:5, submitted:20, approvalRate:95, avgScore:91 },
-]
+const teacherRows: any[] = []
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Overview')

@@ -22,26 +22,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-const mockStudentFees = [
-  { id: 'STU001', name: 'Ahmed Hassan', class: '10-A', branch: 'Main Campus', amount: 15000, paid: 15000, balance: 0, status: 'Paid', lastPayment: '2025-05-01' },
-  { id: 'STU002', name: 'Fatima Khan', class: '10-A', branch: 'Main Campus', amount: 15000, paid: 15000, balance: 0, status: 'Paid', lastPayment: '2025-04-28' },
-  { id: 'STU003', name: 'Muhammad Ali', class: '9-B', branch: 'Main Campus', amount: 12000, paid: 0, balance: 12000, status: 'Overdue', lastPayment: '2025-03-15' },
-  { id: 'STU004', name: 'Zainab Ahmed', class: '10-B', branch: 'North Campus', amount: 15000, paid: 15000, balance: 0, status: 'Paid', lastPayment: '2025-05-02' },
-  { id: 'STU005', name: 'Hassan Ibrahim', class: '8-A', branch: 'South Campus', amount: 10000, paid: 5000, balance: 5000, status: 'Partial', lastPayment: '2025-04-20' },
-  { id: 'STU006', name: 'Aisha Mohammed', class: '9-A', branch: 'Main Campus', amount: 12000, paid: 12000, balance: 0, status: 'Paid', lastPayment: '2025-04-30' },
-  { id: 'STU007', name: 'Omar Farooq', class: '10-A', branch: 'North Campus', amount: 15000, paid: 0, balance: 15000, status: 'Overdue', lastPayment: '2025-02-10' },
-  { id: 'STU008', name: 'Layla Hassan', class: '7-B', branch: 'North Campus', amount: 10000, paid: 10000, balance: 0, status: 'Paid', lastPayment: '2025-05-03' },
-  { id: 'STU009', name: 'Ibrahim Khan', class: '8-A', branch: 'South Campus', amount: 10000, paid: 0, balance: 10000, status: 'Pending', lastPayment: '' },
-  { id: 'STU010', name: 'Noor Fatima', class: '10-B', branch: 'Main Campus', amount: 15000, paid: 15000, balance: 0, status: 'Paid', lastPayment: '2025-05-01' },
-]
+const mockStudentFees: any[] = []
 
-const collectionData = [
-  { month: 'Jan', collected: 180000, outstanding: 42000 },
-  { month: 'Feb', collected: 195000, outstanding: 38000 },
-  { month: 'Mar', collected: 172000, outstanding: 55000 },
-  { month: 'Apr', collected: 210000, outstanding: 30000 },
-  { month: 'May', collected: 145000, outstanding: 37000 },
-]
+const collectionData: any[] = []
 
 const statusColors: Record<string, string> = {
   Paid: 'bg-primary/10 text-primary border-primary/20',
@@ -69,9 +52,9 @@ const donutOpts = {
     label: { show: false },
     emphasis: { label: { show: false } },
     data: [
-      { value: 70, name: 'Collected', itemStyle: { color: '#2A7A30' } },
-      { value: 15, name: 'Pending', itemStyle: { color: '#F59E0B' } },
-      { value: 15, name: 'Overdue', itemStyle: { color: '#CC1E1E' } },
+      { value: 0, name: 'Collected', itemStyle: { color: '#2A7A30' } },
+      { value: 0, name: 'Pending', itemStyle: { color: '#F59E0B' } },
+      { value: 0, name: 'Overdue', itemStyle: { color: '#CC1E1E' } },
     ],
   }],
 }

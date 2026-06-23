@@ -33,20 +33,7 @@ const actionColors: Record<string, { pill: string; icon: string }> = {
   'Settings Change':     { pill: 'bg-muted text-muted-foreground border-border',      icon: 'text-muted-foreground'  },
 }
 
-const mockLogs = [
-  { id: 'LOG001', timestamp: '2025-05-09 14:32:05', user: 'Ms. Sana Malik',   role: 'Teacher',      action: 'Assessment Edit',     module: 'Assessment',     detail: 'Edited grades for Class 10-A, English, Chapter 2',          ip: '192.168.1.42' },
-  { id: 'LOG002', timestamp: '2025-05-09 14:15:22', user: 'Principal Arif',   role: 'Principal',    action: 'Assessment Approval', module: 'Approvals',      detail: 'Approved APV002 — Class 9-B Mathematics',                   ip: '192.168.1.10' },
-  { id: 'LOG003', timestamp: '2025-05-09 13:55:11', user: 'Admin Khalid',     role: 'Branch Admin', action: 'Fee Update',          module: 'Fee Management', detail: 'Marked STU003 fee as Paid — PKR 12,000',                    ip: '192.168.1.5'  },
-  { id: 'LOG004', timestamp: '2025-05-09 13:30:45', user: 'Mr. Tariq Ahmed',  role: 'Teacher',      action: 'Assessment Edit',     module: 'Assessment',     detail: 'Submitted assessment for Class 9-B, Mathematics',           ip: '192.168.1.55' },
-  { id: 'LOG005', timestamp: '2025-05-09 13:00:00', user: 'Admin Khalid',     role: 'Branch Admin', action: 'Login',               module: 'Auth',           detail: 'Logged in from Main Campus',                                ip: '192.168.1.5'  },
-  { id: 'LOG006', timestamp: '2025-05-09 12:45:18', user: 'Ms. Ayesha Noor',  role: 'Teacher',      action: 'Student Update',      module: 'Students',       detail: 'Updated profile for STU007 — Omar Farooq',                  ip: '192.168.1.33' },
-  { id: 'LOG007', timestamp: '2025-05-09 12:10:55', user: 'Principal Arif',   role: 'Principal',    action: 'Assessment Approval', module: 'Approvals',      detail: 'Requested revision on APV003 — insufficient data',          ip: '192.168.1.10' },
-  { id: 'LOG008', timestamp: '2025-05-09 11:50:30', user: 'Admin Khalid',     role: 'Branch Admin', action: 'Deletion',            module: 'Students',       detail: 'Deleted duplicate record STU099',                           ip: '192.168.1.5'  },
-  { id: 'LOG009', timestamp: '2025-05-09 11:20:00', user: 'Super Admin',      role: 'Super Admin',  action: 'Settings Change',     module: 'Admin',          detail: 'Updated academic year to 2025–26',                          ip: '10.0.0.1'     },
-  { id: 'LOG010', timestamp: '2025-05-09 10:55:44', user: 'Ms. Sana Malik',   role: 'Teacher',      action: 'Login',               module: 'Auth',           detail: 'Logged in from Main Campus',                                ip: '192.168.1.42' },
-  { id: 'LOG011', timestamp: '2025-05-08 17:30:00', user: 'Mr. Hassan Raza',  role: 'Teacher',      action: 'Assessment Edit',     module: 'Assessment',     detail: 'Submitted assessment for Class 10-B, Islamic Studies',      ip: '192.168.1.61' },
-  { id: 'LOG012', timestamp: '2025-05-08 16:15:22', user: 'Admin Khalid',     role: 'Branch Admin', action: 'Fee Update',          module: 'Fee Management', detail: 'Marked STU008 fee as Paid — PKR 10,000',                    ip: '192.168.1.5'  },
-]
+const mockLogs: any[] = []
 
 const perPage = 8
 
