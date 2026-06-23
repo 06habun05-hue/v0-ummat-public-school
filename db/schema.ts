@@ -99,3 +99,29 @@ export const auditLogs = pgTable('audit_logs', {
   branch:    text('branch').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// ─── SLOs ────────────────────────────────────────────────────────────────────
+// Powers: Curriculum Intelligence, Curriculum Map
+export const slos = pgTable('slos', {
+  id:          text('id').primaryKey(), // e.g. 'SLO-101'
+  description: text('description').notNull(),
+  class:       text('class').notNull(),
+  subject:     text('subject').notNull(),
+  chapter:     text('chapter').notNull(),
+  ncp:         text('ncp').notNull().default('NCP-GENERIC'),
+  createdAt:   timestamp('created_at').defaultNow().notNull(),
+})
+
+// ─── Assessment Events ────────────────────────────────────────────────────────
+// Powers: SLO Assessment Tracking logs
+export const assessmentEvents = pgTable('assessment_events', {
+  id:             uuid('id').defaultRandom().primaryKey(),
+  sloId:          text('slo_id').notNull().references(() => slos.id, { onDelete: 'cascade' }),
+  class:          text('class').notNull(),
+  testDate:       date('test_date').notNull(),
+  testMethod:     text('test_method').notNull(), // 'MCQs' | 'Writing' | 'Oral' | 'Practical' | 'Project'
+  teachingMethod: text('teaching_method').notNull(), // 'Lecture' | 'Group Activity' | 'Direct Instruction' | 'Research'
+  status:         text('status').notNull().default('Pending'), // 'Completed' | 'Pending' | 'Re-test Scheduled'
+  createdAt:      timestamp('created_at').defaultNow().notNull(),
+})
+
