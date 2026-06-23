@@ -5,58 +5,42 @@ import { Mail, Phone, MapPin, BookOpen, DollarSign, BarChart3, TrendingUp, Alert
 import ReactECharts from 'echarts-for-react'
 import { cn } from '@/lib/utils'
 
-// Mock student data
 const studentData = {
-  id: 'STU001',
-  name: 'Ahmed Hassan',
-  class: '10-A',
-  branch: 'Main Campus',
-  avatar: 'AH',
-  email: 'ahmed.hassan@school.edu',
-  phone: '+966-55-1234567',
-  address: 'Riyadh, Saudi Arabia',
-  gender: 'Male',
-  dob: '2009-05-15',
-  admissionDate: '2020-08-20',
+  id: '',
+  name: 'No Student Loaded',
+  class: 'N/A',
+  branch: 'N/A',
+  avatar: '?',
+  email: '',
+  phone: '',
+  address: '',
+  gender: '',
+  dob: '',
+  admissionDate: '',
   
-  academicOverview: [
-    { name: 'Listening', value: 85 },
-    { name: 'Reading', value: 90 },
-    { name: 'Speaking', value: 80 },
-    { name: 'Understanding', value: 88 },
-    { name: 'Behavior', value: 92 },
-  ],
+  academicOverview: [] as { name: string; value: number }[],
   
   performanceTrend: {
-    terms: ['Term 1', 'Term 2', 'Term 3'],
-    gpas: [3.6, 3.7, 3.8]
+    terms: [] as string[],
+    gpas: [] as number[]
   },
   
-  sloProgress: [
-    { name: 'SLO-001: Main Idea', mastery: 85, ncp: 'NCP-ENG-101', status: 'Mastered' },
-    { name: 'SLO-042: Quadratic Roots', mastery: 78, ncp: 'NCP-MAT-301', status: 'Proficient' },
-    { name: 'SLO-072: Cellular Organelles', mastery: 92, ncp: 'NCP-SCI-201', status: 'Mastered' },
-    { name: 'SLO-087: Surah Al-Baqarah', mastery: 88, ncp: 'NCP-ISL-101', status: 'Mastered' },
-  ],
+  sloProgress: [] as { name: string; mastery: number; ncp: string; status: string }[],
   
   behavioralTrend: {
-    weeks: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'],
-    scores: [85, 88, 84, 90, 92, 91]
+    weeks: [] as string[],
+    scores: [] as number[]
   },
   
   fees: {
-    total: 45000,
-    paid: 45000,
+    total: 0,
+    paid: 0,
     outstanding: 0,
-    lastPayment: '2025-05-01',
-    status: 'Paid',
+    lastPayment: 'N/A',
+    status: 'Unpaid',
   },
   
-  recentAssessments: [
-    { date: '2025-05-05', subject: 'English', score: 92, status: 'Excellence' },
-    { date: '2025-05-03', subject: 'Mathematics', score: 88, status: 'Great' },
-    { date: '2025-05-01', subject: 'Science', score: 85, status: 'Great' },
-  ],
+  recentAssessments: [] as { date: string; subject: string; score: number; status: string }[],
 }
 
 interface PageProps {

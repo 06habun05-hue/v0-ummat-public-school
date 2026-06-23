@@ -12,20 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const mockStudents = [
-  { id: 'STU001', name: 'Ahmed Hassan', class: '10-A', branch: 'Main Campus', attendance: 95, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-  { id: 'STU002', name: 'Fatima Khan', class: '10-A', branch: 'Main Campus', attendance: 88, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-  { id: 'STU003', name: 'Muhammad Ali', class: '9-B', branch: 'Main Campus', attendance: 72, lastAssessment: '2025-05-08', feeStatus: 'Overdue' },
-  { id: 'STU004', name: 'Zainab Ahmed', class: '10-B', branch: 'North Campus', attendance: 98, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-  { id: 'STU005', name: 'Hassan Ibrahim', class: '8-A', branch: 'South Campus', attendance: 85, lastAssessment: '2025-05-07', feeStatus: 'Pending' },
-  { id: 'STU006', name: 'Aisha Mohammed', class: '9-A', branch: 'Main Campus', attendance: 91, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-  { id: 'STU007', name: 'Omar Farooq', class: '10-A', branch: 'North Campus', attendance: 65, lastAssessment: '2025-05-06', feeStatus: 'Overdue' },
-  { id: 'STU008', name: 'Layla Hassan', class: '7-B', branch: 'North Campus', attendance: 93, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-  { id: 'STU009', name: 'Ibrahim Khan', class: '8-A', branch: 'South Campus', attendance: 79, lastAssessment: '2025-05-08', feeStatus: 'Pending' },
-  { id: 'STU010', name: 'Noor Fatima', class: '10-B', branch: 'Main Campus', attendance: 97, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-  { id: 'STU011', name: 'Salim Ahmad', class: '9-B', branch: 'South Campus', attendance: 82, lastAssessment: '2025-05-07', feeStatus: 'Paid' },
-  { id: 'STU012', name: 'Mariam Yusuf', class: '10-A', branch: 'Main Campus', attendance: 96, lastAssessment: '2025-05-09', feeStatus: 'Paid' },
-]
+const mockStudents: any[] = []
 
 type SortKey = 'name' | 'class' | 'attendance' | 'feeStatus'
 

@@ -21,12 +21,7 @@ interface ApprovalStore {
   requestRevision: (id: string, comment: string) => void
 }
 
-const mockPending: PendingApproval[] = [
-  { id: 'APV001', teacher: 'Ms. Sana Malik', class: '10-A', subject: 'English', chapter: 'Chapter 2', slo: 'SLO-003', dateSubmitted: '2025-05-09', studentCount: 28, status: 'pending' },
-  { id: 'APV002', teacher: 'Mr. Tariq Ahmed', class: '9-B', subject: 'Mathematics', chapter: 'Chapter 1', slo: 'SLO-001', dateSubmitted: '2025-05-09', studentCount: 30, status: 'pending' },
-  { id: 'APV003', teacher: 'Ms. Ayesha Noor', class: '8-A', subject: 'Science', chapter: 'Chapter 3', slo: 'SLO-002', dateSubmitted: '2025-05-08', studentCount: 25, status: 'pending' },
-  { id: 'APV004', teacher: 'Mr. Hassan Raza', class: '10-B', subject: 'Islamic Studies', chapter: 'Chapter 1', slo: 'SLO-004', dateSubmitted: '2025-05-08', studentCount: 27, status: 'pending' },
-]
+const mockPending: PendingApproval[] = []
 
 export const useApprovalStore = create<ApprovalStore>((set) => ({
   pending: mockPending,
