@@ -13,17 +13,17 @@ import { motion } from 'framer-motion'
 const classPerformanceOpts = {
   tooltip: { trigger: 'axis' },
   grid: { top: 10, right: 10, bottom: 30, left: 45 },
-  xAxis: { type: 'category', data: ['10-A','10-B','9-A','9-B','8-A'], axisTick: { show: false }, axisLabel: { fontSize: 11 } },
+  xAxis: { type: 'category', data: [], axisTick: { show: false }, axisLabel: { fontSize: 11 } },
   yAxis: { type: 'value', max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } }, axisLabel: { fontSize: 11 } },
-  series: [{ type: 'bar', data: [82,78,85,74,80], itemStyle: { color: '#2A7A30', borderRadius: [4,4,0,0] }, barMaxWidth: 36 }],
+  series: [{ type: 'bar', data: [], itemStyle: { color: '#2A7A30', borderRadius: [4,4,0,0] }, barMaxWidth: 36 }],
 }
 
 const attendanceTrendOpts = {
   tooltip: { trigger: 'axis' },
   grid: { top: 10, right: 10, bottom: 30, left: 45 },
-  xAxis: { type: 'category', data: ['Week 1','Week 2','Week 3','Week 4','Week 5'], axisTick: { show: false }, axisLabel: { fontSize: 10 } },
+  xAxis: { type: 'category', data: [], axisTick: { show: false }, axisLabel: { fontSize: 10 } },
   yAxis: { type: 'value', min: 80, max: 100, splitLine: { lineStyle: { color: '#f0f0f0' } }, axisLabel: { fontSize: 11 } },
-  series: [{ type: 'line', smooth: true, data: [91,93,90,94,94], lineStyle: { color: '#2A7A30', width: 2 }, itemStyle: { color: '#2A7A30' }, areaStyle: { color: '#2A7A3015' } }],
+  series: [{ type: 'line', smooth: true, data: [], lineStyle: { color: '#2A7A30', width: 2 }, itemStyle: { color: '#2A7A30' }, areaStyle: { color: '#2A7A3015' } }],
 }
 
 const feeOpts = {
@@ -32,19 +32,14 @@ const feeOpts = {
     type: 'pie', radius: ['50%','78%'], avoidLabelOverlap: false,
     label: { show: false },
     data: [
-      { value: 87, name: 'Collected', itemStyle: { color: '#2A7A30' } },
-      { value: 7,  name: 'Pending',   itemStyle: { color: '#F59E0B' } },
-      { value: 6,  name: 'Overdue',   itemStyle: { color: '#CC1E1E' } },
+      { value: 0, name: 'Collected', itemStyle: { color: '#2A7A30' } },
+      { value: 0,  name: 'Pending',   itemStyle: { color: '#F59E0B' } },
+      { value: 0,  name: 'Overdue',   itemStyle: { color: '#CC1E1E' } },
     ],
   }],
 }
 
-const recentActivity = [
-  { user: 'Ms. Sana Malik', action: 'Submitted assessment', detail: 'Class 10-A · English · Chapter 2', time: '5m ago', type: 'submit' },
-  { user: 'Principal Arif', action: 'Approved assessment', detail: 'Class 9-B · Math · Chapter 1', time: '22m ago', type: 'approve' },
-  { user: 'Admin Khalid',   action: 'Marked fee as paid', detail: 'STU003 · PKR 12,000', time: '1h ago', type: 'fee' },
-  { user: 'Mr. Tariq',      action: 'Submitted assessment', detail: 'Class 9-B · Math · Chapter 1', time: '2h ago', type: 'submit' },
-]
+const recentActivity: any[] = []
 
 const actColor: Record<string,string> = {
   submit: 'bg-primary/10 text-primary',
@@ -62,8 +57,6 @@ export function AdminPortal() {
 
   // Mock data variation based on branch
   const getBranchMultiplier = () => {
-    if (selectedBranch === 'North Campus') return 0.8
-    if (selectedBranch === 'South Campus') return 0.6
     return 1.0
   }
 
@@ -102,11 +95,11 @@ export function AdminPortal() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Students", value: String(Math.round(2458 * m)), icon: Users, trend: { percentage: 12, isPositive: true } },
-          { label: "Total Teachers", value: String(Math.round(124 * m)), icon: BookOpen, trend: { percentage: 5, isPositive: true } },
-          { label: "Attendance Rate", value: (94.2 * m).toFixed(1) + '%', icon: CheckCircle2, trend: { percentage: 3, isPositive: true } },
-          { label: "Pending Approvals", value: String(Math.round(pending.length * m)), icon: AlertCircle, trend: { percentage: 8, isPositive: false } },
-          { label: "Fee Collection", value: (87.5 * m).toFixed(1) + '%', icon: CreditCard, trend: { percentage: 6, isPositive: true } }
+          { label: "Total Students", value: "0", icon: Users, trend: { percentage: 0, isPositive: true } },
+          { label: "Total Teachers", value: "0", icon: BookOpen, trend: { percentage: 0, isPositive: true } },
+          { label: "Attendance Rate", value: "0%", icon: CheckCircle2, trend: { percentage: 0, isPositive: true } },
+          { label: "Pending Approvals", value: "0", icon: AlertCircle, trend: { percentage: 0, isPositive: false } },
+          { label: "Fee Collection", value: "0%", icon: CreditCard, trend: { percentage: 0, isPositive: true } }
         ].map((card, i) => (
           <motion.div
             key={card.label}
