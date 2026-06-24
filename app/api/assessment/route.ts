@@ -3,6 +3,8 @@ import { db } from '@/db'
 import * as schema from '@/db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
