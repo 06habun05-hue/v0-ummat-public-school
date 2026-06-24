@@ -17,6 +17,7 @@ import {
   BookOpen,
   ScrollText,
   ShieldCheck,
+  GraduationCap,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useUIStore, UserRole } from '@/lib/store/ui-store'
@@ -34,6 +35,7 @@ const ALL_NAV_GROUPS = {
       { label: 'Assessment', href: '/assessment', icon: ClipboardList },
       { label: 'Attendance', href: '/attendance', icon: UserCheck },
       { label: 'Students', href: '/students', icon: Users },
+      { label: 'Classes', href: '/classes', icon: GraduationCap },
       { label: 'SLO & Curriculum', href: '/slo', icon: BookOpen },
       { label: 'SLO Tracking', href: '/slo-tracking', icon: ScrollText },
       { label: 'Approvals', href: '/approvals', icon: CheckCircle, badge: true },
