@@ -22,9 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-const mockStudentFees: any[] = []
-
-const collectionData: any[] = []
+import { useEffect } from 'react'
 
 const statusColors: Record<string, string> = {
   Paid: 'bg-primary/10 text-primary border-primary/20',
@@ -33,45 +31,81 @@ const statusColors: Record<string, string> = {
   Pending: 'bg-muted text-muted-foreground border-border',
 }
 
-const collectionChartOpts = {
-  tooltip: { trigger: 'axis', backgroundColor: '#fff', borderRadius: 12, shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.1)' },
-  legend: { data: ['Collected', 'Outstanding'], bottom: 0, textStyle: { fontSize: 10, fontWeight: 'bold', color: '#666' }, icon: 'circle' },
-  grid: { top: 20, right: 10, bottom: 40, left: 50 },
-  xAxis: { type: 'category', data: collectionData.map(d => d.month), axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false }, axisLabel: { color: '#999', fontSize: 10 } },
-  yAxis: { type: 'value', axisLabel: { formatter: (v: number) => `${v / 1000}k`, color: '#999', fontSize: 10 }, splitLine: { lineStyle: { type: 'dashed', color: '#f0f0f0' } } },
-  series: [
-    { name: 'Collected', type: 'bar', data: collectionData.map(d => d.collected), itemStyle: { color: '#2A7A30', borderRadius: [6, 6, 0, 0] }, barWidth: '35%' },
-    { name: 'Outstanding', type: 'bar', data: collectionData.map(d => d.outstanding), itemStyle: { color: '#CC1E1E', borderRadius: [6, 6, 0, 0] }, barWidth: '35%' },
-  ],
-}
-
-const donutOpts = {
-  tooltip: { trigger: 'item' },
-  series: [{
-    type: 'pie', radius: ['60%', '85%'], avoidLabelOverlap: false,
-    label: { show: false },
-    emphasis: { label: { show: false } },
-    data: [
-      { value: 0, name: 'Collected', itemStyle: { color: '#2A7A30' } },
-      { value: 0, name: 'Pending', itemStyle: { color: '#F59E0B' } },
-      { value: 0, name: 'Overdue', itemStyle: { color: '#CC1E1E' } },
-    ],
-  }],
-}
-
 export default function FeesPage() {
+  const [studentFees, setStudentFees] = useState<any[]>([])
+  const [collectionData, setCollectionData] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [sortKey, setSortKey] = useState<'name' | 'balance' | 'status'>('balance')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
-  const totalCollected = mockStudentFees.reduce((s, f) => s + f.paid, 0)
-  const totalOutstanding = mockStudentFees.reduce((s, f) => s + f.balance, 0)
-  const totalAmount = mockStudentFees.reduce((s, f) => s + f.amount, 0)
-  const collectionRate = Math.round((totalCollected / totalAmount) * 100)
-  const overdueCount = mockStudentFees.filter(f => f.status === 'Overdue').length
+  const fetchFees = async () => {
+    try {
+      const res = await fetch('/api/fees')
+      if (res.ok) {
+        const data = await res.json()
+        setStudentFees(data.fees || [])
+        setCollectionData(data.collectionData || [])
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
-  const filtered = mockStudentFees
+  useEffect(() => {
+    fetchFees()
+  }, [])
+
+  const handleSettle = async (id: string) => {
+    try {
+      const res = await fetch('/api/fees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      if (res.ok) {
+        fetchFees()
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const totalCollected = studentFees.reduce((s, f) => s + f.paid, 0)
+  const totalOutstanding = studentFees.reduce((s, f) => s + f.balance, 0)
+  const totalAmount = studentFees.reduce((s, f) => s + f.amount, 0)
+  const collectionRate = totalAmount > 0 ? Math.round((totalCollected / totalAmount) * 100) : 0
+  const overdueCount = studentFees.filter(f => f.status === 'Overdue').length
+  const pendingCount = studentFees.filter(f => f.status === 'Pending').length
+  const paidCount = studentFees.filter(f => f.status === 'Paid').length
+
+  const collectionChartOpts = {
+    tooltip: { trigger: 'axis', backgroundColor: '#fff', borderRadius: 12, shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.1)' },
+    legend: { data: ['Collected', 'Outstanding'], bottom: 0, textStyle: { fontSize: 10, fontWeight: 'bold', color: '#666' }, icon: 'circle' },
+    grid: { top: 20, right: 10, bottom: 40, left: 50 },
+    xAxis: { type: 'category', data: collectionData.map(d => d.month), axisLine: { lineStyle: { color: '#eee' } }, axisTick: { show: false }, axisLabel: { color: '#999', fontSize: 10 } },
+    yAxis: { type: 'value', axisLabel: { formatter: (v: number) => `${v / 1000}k`, color: '#999', fontSize: 10 }, splitLine: { lineStyle: { type: 'dashed', color: '#f0f0f0' } } },
+    series: [
+      { name: 'Collected', type: 'bar', data: collectionData.map(d => d.collected), itemStyle: { color: '#2A7A30', borderRadius: [6, 6, 0, 0] }, barWidth: '35%' },
+      { name: 'Outstanding', type: 'bar', data: collectionData.map(d => d.outstanding), itemStyle: { color: '#CC1E1E', borderRadius: [6, 6, 0, 0] }, barWidth: '35%' },
+    ],
+  }
+
+  const donutOpts = {
+    tooltip: { trigger: 'item' },
+    series: [{
+      type: 'pie', radius: ['60%', '85%'], avoidLabelOverlap: false,
+      label: { show: false },
+      emphasis: { label: { show: false } },
+      data: [
+        { value: paidCount, name: 'Collected', itemStyle: { color: '#2A7A30' } },
+        { value: pendingCount, name: 'Pending', itemStyle: { color: '#F59E0B' } },
+        { value: overdueCount, name: 'Overdue', itemStyle: { color: '#CC1E1E' } },
+      ],
+    }],
+  }
+
+  const filtered = studentFees
     .filter(f => f.name.toLowerCase().includes(search.toLowerCase()) || f.id.toLowerCase().includes(search.toLowerCase()))
     .filter(f => statusFilter === 'All' || f.status === statusFilter)
     .sort((a, b) => {
@@ -268,6 +302,7 @@ export default function FeesPage() {
                       className="rounded-xl h-9 px-4 text-[10px] font-black uppercase tracking-widest shadow-md transition-all disabled:opacity-30"
                       disabled={f.status === 'Paid'}
                       variant={f.status === 'Paid' ? 'ghost' : 'default'}
+                      onClick={() => handleSettle(f.id)}
                     >
                       {f.status === 'Paid' ? 'Audited ✓' : 'Settle'}
                     </Button>
@@ -320,6 +355,7 @@ export default function FeesPage() {
                   size="sm" 
                   className="rounded-xl h-8 px-4 text-[9px] font-black uppercase tracking-widest shadow-md transition-all disabled:opacity-30"
                   disabled={f.status === 'Paid'}
+                  onClick={() => handleSettle(f.id)}
                 >
                   {f.status === 'Paid' ? 'Audited' : 'Settle'}
                 </Button>

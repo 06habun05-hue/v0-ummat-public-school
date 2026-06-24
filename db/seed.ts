@@ -1,12 +1,12 @@
 import { loadEnvConfig } from '@next/env'
 loadEnvConfig(process.cwd())
 
-import { db } from './index'
-import * as schema from './schema'
 import { eq } from 'drizzle-orm'
 
 async function seed() {
   console.log('🌱 Starting database seeding...')
+  const { db } = await import('./index')
+  const schema = await import('./schema')
 
   // 1. Seed Students
   const existingStudents = await db.select().from(schema.students)
@@ -120,20 +120,60 @@ async function seed() {
   const existingFees = await db.select().from(schema.fees)
   if (existingFees.length === 0 && studentIds.length > 0) {
     console.log('Inserting fee records...')
-    const feeList = studentIds.map((sId, index) => {
+    const studentsData = await db.select().from(schema.students)
+    const feeList = studentsData.flatMap((student, index) => {
+      // Create current term invoice
       const statuses = ['collected', 'pending', 'overdue']
       const status = statuses[index % 3]
-      return {
-        studentId: sId,
-        branch: 'Main Campus',
+      const currentInvoice = {
+        studentId: student.id,
+        branch: student.branch,
         amount: '12000.00',
         status,
         dueDate: new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
         paidDate: status === 'collected' ? new Date().toISOString().split('T')[0] : null
       }
+
+      // Create historical invoices for past months to populate collection graphs
+      const historicalInvoices = [
+        {
+          studentId: student.id,
+          branch: student.branch,
+          amount: '12000.00',
+          status: 'collected',
+          dueDate: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0],
+          paidDate: new Date(Date.now() - 28 * 86400000).toISOString().split('T')[0]
+        },
+        {
+          studentId: student.id,
+          branch: student.branch,
+          amount: '12000.00',
+          status: 'collected',
+          dueDate: new Date(Date.now() - 60 * 86400000).toISOString().split('T')[0],
+          paidDate: new Date(Date.now() - 59 * 86400000).toISOString().split('T')[0]
+        }
+      ]
+
+      return [currentInvoice, ...historicalInvoices]
     })
     await db.insert(schema.fees).values(feeList)
     console.log('Inserted fees.')
+  }
+
+  // 9. Seed Audit Logs
+  const existingAuditLogs = await db.select().from(schema.auditLogs)
+  if (existingAuditLogs.length === 0) {
+    console.log('Inserting audit logs...')
+    const auditLogsList = [
+      { userName: 'Sarah Ahmed', action: 'Assessment Edit', entity: 'assessment', branch: 'Main Campus', createdAt: new Date(Date.now() - 3600000 * 2) },
+      { userName: 'Sarah Ahmed', action: 'Assessment Approval', entity: 'approval', branch: 'Main Campus', createdAt: new Date(Date.now() - 3600000 * 3) },
+      { userName: 'Zafar Iqbal', action: 'Fee Update', entity: 'fee', branch: 'Main Campus', createdAt: new Date(Date.now() - 3600000 * 5) },
+      { userName: 'Yasir Khan', action: 'Student Update', entity: 'assessment', branch: 'North Campus', createdAt: new Date(Date.now() - 3600000 * 12) },
+      { userName: 'Sarah Ahmed', action: 'Login', entity: 'approval', branch: 'Main Campus', createdAt: new Date(Date.now() - 3600000 * 24) },
+      { userName: 'Zafar Iqbal', action: 'Settings Change', entity: 'approval', branch: 'Main Campus', createdAt: new Date(Date.now() - 3600000 * 48) },
+    ]
+    await db.insert(schema.auditLogs).values(auditLogsList)
+    console.log('Inserted audit logs.')
   }
 
   console.log('🎉 Database seeding completed successfully!')

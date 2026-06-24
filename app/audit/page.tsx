@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Clock, User, Settings, DollarSign, FileText, LogIn, LogOut, Trash2, Edit } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -33,22 +33,36 @@ const actionColors: Record<string, { pill: string; icon: string }> = {
   'Settings Change':     { pill: 'bg-muted text-muted-foreground border-border',      icon: 'text-muted-foreground'  },
 }
 
-const mockLogs: any[] = []
-
 const perPage = 8
 
 export default function AuditPage() {
+  const [logs, setLogs] = useState<any[]>([])
   const [search, setSearch]             = useState('')
   const [moduleFilter, setModuleFilter] = useState('All')
   const [actionFilter, setActionFilter] = useState('All')
   const [roleFilter, setRoleFilter]     = useState('All')
   const [page, setPage]                 = useState(1)
 
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch('/api/audit')
+        if (res.ok) {
+          const data = await res.json()
+          setLogs(data.logs || [])
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchLogs()
+  }, [])
+
   const modules = ['All', 'Assessment', 'Approvals', 'Fee Management', 'Students', 'Auth', 'Admin']
-  const actions = ['All', ...Array.from(new Set(mockLogs.map(l => l.action)))]
+  const actions = ['All', ...Array.from(new Set(logs.map(l => l.action)))]
   const roles   = ['All', 'Teacher', 'Principal', 'Branch Admin', 'Super Admin']
 
-  const filtered = mockLogs.filter(l =>
+  const filtered = logs.filter(l =>
     (search === '' || l.user.toLowerCase().includes(search.toLowerCase()) || l.detail.toLowerCase().includes(search.toLowerCase())) &&
     (moduleFilter === 'All' || l.module === moduleFilter) &&
     (actionFilter === 'All' || l.action === actionFilter) &&
