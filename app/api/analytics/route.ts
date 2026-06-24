@@ -3,6 +3,8 @@ import { db } from '@/db'
 import * as schema from '@/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const [studentsCount] = await db.select({ count: sql<number>`count(*)::integer` }).from(schema.students)
