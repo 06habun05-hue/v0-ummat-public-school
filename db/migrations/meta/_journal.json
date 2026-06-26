@@ -8,6 +8,13 @@
       "when": 1782214750648,
       "tag": "0000_new_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782398512298,
+      "tag": "0001_many_timeslip",
+      "breakpoints": true
     }
   ]
 }

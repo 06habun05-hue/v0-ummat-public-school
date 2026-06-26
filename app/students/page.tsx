@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Filter, ChevronUp, ChevronDown, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -12,8 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const mockStudents: any[] = []
-
 type SortKey = 'name' | 'class' | 'attendance' | 'feeStatus'
 
 const feeColors: Record<string, string> = {
@@ -23,6 +21,11 @@ const feeColors: Record<string, string> = {
 }
 
 export default function StudentsPage() {
+  const [students, setStudents] = useState<any[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [loading, setLoading] = useState(true)
+
   const [search, setSearch] = useState('')
   const [branchFilter, setBranchFilter] = useState('All')
   const [classFilter, setClassFilter] = useState('All')
@@ -36,24 +39,41 @@ export default function StudentsPage() {
   const classes = ['All', '10-A', '10-B', '9-A', '9-B', '8-A', '7-B']
   const feeStatuses = ['All', 'Paid', 'Pending', 'Overdue']
 
+  const fetchStudents = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        search,
+        branch: branchFilter,
+        class: classFilter,
+        feeFilter: feeFilter,
+        sortKey,
+        sortDir,
+        page: String(page),
+        perPage: String(perPage),
+      })
+      const res = await fetch(`/api/students?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setStudents(data.students || [])
+        setTotalCount(data.totalCount || 0)
+        setTotalPages(data.totalPages || 0)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchStudents()
+  }, [search, branchFilter, classFilter, feeFilter, sortKey, sortDir, page])
+
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortKey(key); setSortDir('asc') }
   }
-
-  const filtered = mockStudents
-    .filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.id.toLowerCase().includes(search.toLowerCase()))
-    .filter(s => branchFilter === 'All' || s.branch === branchFilter)
-    .filter(s => classFilter === 'All' || s.class === classFilter)
-    .filter(s => feeFilter === 'All' || s.feeStatus === feeFilter)
-    .sort((a, b) => {
-      const mult = sortDir === 'asc' ? 1 : -1
-      if (sortKey === 'attendance') return (a.attendance - b.attendance) * mult
-      return String(a[sortKey]).localeCompare(String(b[sortKey])) * mult
-    })
-
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage)
-  const totalPages = Math.ceil(filtered.length / perPage)
 
   const SortIcon = ({ k }: { k: SortKey }) => sortKey === k
     ? (sortDir === 'asc' ? <ChevronUp size={13} /> : <ChevronDown size={13} />)
@@ -63,7 +83,7 @@ export default function StudentsPage() {
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div>
         <h2 className="text-2xl font-heading font-bold text-foreground tracking-tight">Students</h2>
-        <p className="text-sm text-muted-foreground mt-1">{filtered.length} students enrolled across all branches</p>
+        <p className="text-sm text-muted-foreground mt-1">{totalCount} students enrolled across all branches</p>
       </div>
 
       {/* Filters */}
@@ -111,81 +131,95 @@ export default function StudentsPage() {
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted border-b border-border">
-              <tr>
-                {([['name', 'Student'], ['class', 'Class'], ['', 'Branch'], ['attendance', 'Attendance %'], ['', 'Last Assessment'], ['feeStatus', 'Fee Status'], ['', '']] as [SortKey | '', string][]).map(([key, label], i) => (
-                  <th
-                    key={i}
-                    onClick={() => key && handleSort(key)}
-                    className={cn('px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide', key && 'cursor-pointer hover:text-foreground')}
-                  >
-                    <span className="flex items-center gap-1">
-                      {label}
-                      {key && <SortIcon k={key} />}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {paginated.map((s, i) => (
-                <tr key={s.id} className={cn('hover:bg-muted/50 transition-colors', i % 2 === 1 && 'bg-muted/20')}>
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-foreground">{s.name}</p>
-                      <p className="text-[11px] text-muted-foreground font-mono">{s.id}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-medium">{s.class}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.branch}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-border rounded-full h-1.5">
-                        <div
-                          className={cn('h-1.5 rounded-full', s.attendance >= 90 ? 'bg-primary' : s.attendance >= 75 ? 'bg-warning' : 'bg-accent')}
-                          style={{ width: `${s.attendance}%` }}
-                        />
-                      </div>
-                      <span className={cn('text-xs font-semibold', s.attendance >= 90 ? 'text-primary' : s.attendance >= 75 ? 'text-warning' : 'text-accent')}>
-                        {s.attendance}%
+          {loading ? (
+            <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
+              Loading students...
+            </div>
+          ) : students.length === 0 ? (
+            <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
+              No students found
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-muted border-b border-border">
+                <tr>
+                  {([['name', 'Student'], ['class', 'Class'], ['', 'Branch'], ['attendance', 'Attendance %'], ['', 'Last Assessment'], ['feeStatus', 'Fee Status'], ['', '']] as [SortKey | '', string][]).map(([key, label], i) => (
+                    <th
+                      key={i}
+                      onClick={() => key && handleSort(key)}
+                      className={cn('px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide', key && 'cursor-pointer hover:text-foreground')}
+                    >
+                      <span className="flex items-center gap-1">
+                        {label}
+                        {key && <SortIcon k={key} />}
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(s.lastAssessment).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">
-                    <span className={cn('text-[11px] font-semibold px-2 py-1 rounded-full', feeColors[s.feeStatus])}>
-                      {s.feeStatus}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/students/${s.id}`} className="p-1.5 hover:bg-muted rounded-md inline-flex transition-colors">
-                      <Eye size={14} className="text-muted-foreground" />
-                    </Link>
-                  </td>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {students.map((s, i) => (
+                  <tr key={s.id} className={cn('hover:bg-muted/50 transition-colors', i % 2 === 1 && 'bg-muted/20')}>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className="font-medium text-foreground">{s.name}</p>
+                        <p className="text-[11px] text-muted-foreground font-mono">{s.id}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-medium">{s.class}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.branch}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-border rounded-full h-1.5">
+                          <div
+                            className={cn('h-1.5 rounded-full', s.attendance >= 90 ? 'bg-primary' : s.attendance >= 75 ? 'bg-warning' : 'bg-accent')}
+                            style={{ width: `${s.attendance}%` }}
+                          />
+                        </div>
+                        <span className={cn('text-xs font-semibold', s.attendance >= 90 ? 'text-primary' : s.attendance >= 75 ? 'text-warning' : 'text-accent')}>
+                          {s.attendance}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                      {s.lastAssessment ? new Date(s.lastAssessment).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={cn('text-[11px] font-semibold px-2 py-1 rounded-full', feeColors[s.feeStatus] || 'bg-muted text-muted-foreground')}>
+                        {s.feeStatus}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/students/${s.id}`} className="p-1.5 hover:bg-muted rounded-md inline-flex transition-colors">
+                        <Eye size={14} className="text-muted-foreground" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
-          <p className="text-xs text-muted-foreground">
-            Showing {Math.min((page - 1) * perPage + 1, filtered.length)}–{Math.min(page * perPage, filtered.length)} of {filtered.length}
-          </p>
-          <div className="flex gap-1">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={cn('w-7 h-7 text-xs rounded-md transition-colors', page === i + 1 ? 'bg-primary text-white' : 'hover:bg-muted text-muted-foreground')}
-              >
-                {i + 1}
-              </button>
-            ))}
+        {!loading && students.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
+            <p className="text-xs text-muted-foreground">
+              Showing {Math.min((page - 1) * perPage + 1, totalCount)}–{Math.min(page * perPage, totalCount)} of {totalCount}
+            </p>
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i + 1)}
+                  className={cn('w-7 h-7 text-xs rounded-md transition-colors', page === i + 1 ? 'bg-primary text-white' : 'hover:bg-muted text-muted-foreground')}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

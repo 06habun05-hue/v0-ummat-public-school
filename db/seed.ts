@@ -176,7 +176,58 @@ async function seed() {
     console.log('Inserted audit logs.')
   }
 
+  // 10. Seed Classes
+  const existingClasses = await db.select().from(schema.classes)
+  if (existingClasses.length === 0) {
+    console.log('Inserting classes...')
+    const classesList = [
+      {
+        id: 'cls-1', name: 'Grade 1', grade: '1',
+        subjects: ['Mathematics', 'English', 'Urdu', 'Islamic Studies', 'Art & Craft'],
+        sections: [
+          { id: 'sec-1a', name: 'A', capacity: 30, teacher: 'Ms. Fatima Zahra' },
+          { id: 'sec-1b', name: 'B', capacity: 30, teacher: 'Ms. Ayesha Siddiqui' },
+        ],
+      },
+      {
+        id: 'cls-2', name: 'Grade 2', grade: '2',
+        subjects: ['Mathematics', 'English', 'Urdu', 'Islamic Studies', 'Science'],
+        sections: [
+          { id: 'sec-2a', name: 'A', capacity: 32, teacher: 'Ms. Zara Malik' },
+        ],
+      },
+      {
+        id: 'cls-3', name: 'Grade 5', grade: '5',
+        subjects: ['Mathematics', 'English', 'Urdu', 'Science', 'Social Studies', 'Islamic Studies'],
+        sections: [
+          { id: 'sec-5a', name: 'A', capacity: 35, teacher: 'Mr. Hassan Ali' },
+          { id: 'sec-5b', name: 'B', capacity: 35, teacher: 'Mr. Bilal Ahmed' },
+          { id: 'sec-5c', name: 'C', capacity: 35, teacher: 'Mr. Aamir Khan' },
+        ],
+      },
+      {
+        id: 'cls-4', name: 'Grade 8', grade: '8',
+        subjects: ['Mathematics', 'English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Pakistan Studies', 'Islamic Studies', 'Computer Science'],
+        sections: [
+          { id: 'sec-8a', name: 'A', capacity: 40, teacher: 'Mr. Usman Ghani' },
+          { id: 'sec-8b', name: 'B', capacity: 40, teacher: 'Ms. Sana Javed' },
+        ],
+      },
+      {
+        id: 'cls-5', name: 'Grade 10', grade: '10',
+        subjects: ['Mathematics', 'English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Pakistan Studies', 'Islamic Studies'],
+        sections: [
+          { id: 'sec-10a', name: 'A', capacity: 42, teacher: 'Mr. Hassan Ali' },
+          { id: 'sec-10b', name: 'B', capacity: 42, teacher: 'Ms. Fatima Zahra' },
+        ],
+      },
+    ]
+    await db.insert(schema.classes).values(classesList)
+    console.log('Inserted classes.')
+  }
+
   console.log('🎉 Database seeding completed successfully!')
+
 }
 
 seed().catch(err => {

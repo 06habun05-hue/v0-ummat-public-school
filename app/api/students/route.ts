@@ -125,3 +125,86 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const { name, branch, class: className, status } = body
+
+    if (!name || !branch || !className) {
+      return NextResponse.json({ error: 'Name, branch, and class are required' }, { status: 400 })
+    }
+
+    const [newStudent] = await db
+      .insert(schema.students)
+      .values({
+        name,
+        branch,
+        class: className,
+        status: status || 'Active',
+      })
+      .returning()
+
+    return NextResponse.json(newStudent)
+  } catch (error: any) {
+    console.error('Students POST API Error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { id, name, branch, class: className, status } = body
+
+    if (!id || !name || !branch || !className) {
+      return NextResponse.json({ error: 'ID, name, branch, and class are required' }, { status: 400 })
+    }
+
+    const [updatedStudent] = await db
+      .update(schema.students)
+      .set({
+        name,
+        branch,
+        class: className,
+        status: status || 'Active',
+      })
+      .where(eq(schema.students.id, id))
+      .returning()
+
+    if (!updatedStudent) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(updatedStudent)
+  } catch (error: any) {
+    console.error('Students PUT API Error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+    }
+
+    const [deletedStudent] = await db
+      .delete(schema.students)
+      .where(eq(schema.students.id, id))
+      .returning()
+
+    if (!deletedStudent) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(deletedStudent)
+  } catch (error: any) {
+    console.error('Students DELETE API Error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+

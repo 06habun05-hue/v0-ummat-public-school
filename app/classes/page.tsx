@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   GraduationCap,
   Plus,
@@ -50,53 +50,7 @@ const TEACHER_OPTIONS = [
   'Mr. Usman Ghani', 'Ms. Sana Javed',
 ]
 
-const INITIAL_CLASSES: ClassRecord[] = [
-  {
-    id: 'cls-1', name: 'Grade 1', grade: '1',
-    subjects: ['Mathematics', 'English', 'Urdu', 'Islamic Studies', 'Art & Craft'],
-    sections: [
-      { id: 'sec-1a', name: 'A', capacity: 30, teacher: 'Ms. Fatima Zahra' },
-      { id: 'sec-1b', name: 'B', capacity: 30, teacher: 'Ms. Ayesha Siddiqui' },
-    ],
-    createdAt: '2024-01-10',
-  },
-  {
-    id: 'cls-2', name: 'Grade 2', grade: '2',
-    subjects: ['Mathematics', 'English', 'Urdu', 'Islamic Studies', 'Science'],
-    sections: [
-      { id: 'sec-2a', name: 'A', capacity: 32, teacher: 'Ms. Zara Malik' },
-    ],
-    createdAt: '2024-01-10',
-  },
-  {
-    id: 'cls-3', name: 'Grade 5', grade: '5',
-    subjects: ['Mathematics', 'English', 'Urdu', 'Science', 'Social Studies', 'Islamic Studies'],
-    sections: [
-      { id: 'sec-5a', name: 'A', capacity: 35, teacher: 'Mr. Hassan Ali' },
-      { id: 'sec-5b', name: 'B', capacity: 35, teacher: 'Mr. Bilal Ahmed' },
-      { id: 'sec-5c', name: 'C', capacity: 35, teacher: 'Mr. Aamir Khan' },
-    ],
-    createdAt: '2024-01-11',
-  },
-  {
-    id: 'cls-4', name: 'Grade 8', grade: '8',
-    subjects: ['Mathematics', 'English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Pakistan Studies', 'Islamic Studies', 'Computer Science'],
-    sections: [
-      { id: 'sec-8a', name: 'A', capacity: 40, teacher: 'Mr. Usman Ghani' },
-      { id: 'sec-8b', name: 'B', capacity: 40, teacher: 'Ms. Sana Javed' },
-    ],
-    createdAt: '2024-01-12',
-  },
-  {
-    id: 'cls-5', name: 'Grade 10', grade: '10',
-    subjects: ['Mathematics', 'English', 'Urdu', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Pakistan Studies', 'Islamic Studies'],
-    sections: [
-      { id: 'sec-10a', name: 'A', capacity: 42, teacher: 'Mr. Hassan Ali' },
-      { id: 'sec-10b', name: 'B', capacity: 42, teacher: 'Ms. Fatima Zahra' },
-    ],
-    createdAt: '2024-01-12',
-  },
-]
+const INITIAL_CLASSES: ClassRecord[] = [] // Empty INITIAL_CLASSES as request to remove mock data
 
 function uid() {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -348,33 +302,85 @@ function DeleteModal({ className, onConfirm, onClose }: { className: string; onC
 }
 
 export default function ClassesPage() {
-  const [classes, setClasses] = useState<ClassRecord[]>(INITIAL_CLASSES)
+  const [classes, setClasses] = useState<ClassRecord[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [showAddModal, setShowAddModal] = useState(false)
   const [editTarget, setEditTarget] = useState<ClassRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ClassRecord | null>(null)
 
+  const fetchClasses = async () => {
+    try {
+      const res = await fetch('/api/classes')
+      if (res.ok) {
+        const data = await res.json()
+        setClasses(data)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchClasses()
+  }, [])
+
   const filtered = classes.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) || c.grade.toLowerCase().includes(search.toLowerCase())
   )
 
-  function handleAdd(data: ClassFormData) {
-    setClasses(prev => [...prev, { id: uid(), createdAt: new Date().toISOString().split('T')[0], ...data }])
-    setShowAddModal(false)
+  async function handleAdd(data: ClassFormData) {
+    try {
+      const res = await fetch('/api/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: uid(), ...data }),
+      })
+      if (res.ok) {
+        fetchClasses()
+        setShowAddModal(false)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  function handleEdit(data: ClassFormData) {
+  async function handleEdit(data: ClassFormData) {
     if (!editTarget) return
-    setClasses(prev => prev.map(c => c.id === editTarget.id ? { ...c, ...data } : c))
-    setEditTarget(null)
+    try {
+      const res = await fetch('/api/classes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editTarget.id, ...data }),
+      })
+      if (res.ok) {
+        fetchClasses()
+        setEditTarget(null)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!deleteTarget) return
-    setClasses(prev => prev.filter(c => c.id !== deleteTarget.id))
-    setDeleteTarget(null)
+    try {
+      const res = await fetch(`/api/classes?id=${deleteTarget.id}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        fetchClasses()
+        setDeleteTarget(null)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
+
+
 
   const totalSections = classes.reduce((sum, c) => sum + c.sections.length, 0)
   const totalSeats = classes.reduce((sum, c) => sum + c.sections.reduce((s2, sec) => s2 + sec.capacity, 0), 0)

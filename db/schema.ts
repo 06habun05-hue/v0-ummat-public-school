@@ -6,7 +6,9 @@ import {
   date,
   integer,
   numeric,
+  jsonb,
 } from 'drizzle-orm/pg-core'
+
 
 // ─── Students ────────────────────────────────────────────────────────────────
 // Powers: Total Students KPI, Class Performance chart
@@ -124,4 +126,16 @@ export const assessmentEvents = pgTable('assessment_events', {
   status:         text('status').notNull().default('Pending'), // 'Completed' | 'Pending' | 'Re-test Scheduled'
   createdAt:      timestamp('created_at').defaultNow().notNull(),
 })
+
+// ─── Classes ──────────────────────────────────────────────────────────────────
+// Powers: Classes & Sections management
+export const classes = pgTable('classes', {
+  id:        text('id').primaryKey(), // using text since existing mock IDs are strings (e.g., cls-1)
+  name:      text('name').notNull(),
+  grade:     text('grade').notNull(),
+  subjects:  jsonb('subjects').$type<string[]>().notNull().default([]),
+  sections:  jsonb('sections').$type<any[]>().notNull().default([]),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 
