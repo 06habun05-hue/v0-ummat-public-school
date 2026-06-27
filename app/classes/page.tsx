@@ -17,6 +17,20 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
+
 
 // Types
 
@@ -210,20 +224,43 @@ function ClassModal({ initial, onSave, onClose }: { initial?: ClassRecord; onSav
               </div>
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1.5">Grade / Level <span className="text-accent">*</span></label>
-                <input value={grade} onChange={e => setGrade(e.target.value)} placeholder="e.g. 6" className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+                <Select value={grade} onValueChange={setGrade}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map(g => (
+                      <SelectItem key={g} value={g}>Grade {g}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
 
           <div>
             <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Subjects <span className="text-foreground font-normal normal-case tracking-normal">({subjects.length} selected)</span></h3>
-            <div className="flex flex-wrap gap-2">
-              {SUBJECT_OPTIONS.map(sub => (
-                <button key={sub} onClick={() => toggleSubject(sub)} className={cn('px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all', subjects.includes(sub) ? 'bg-primary text-white border-primary shadow-sm' : 'bg-muted/40 text-muted-foreground border-border hover:border-primary/30 hover:text-foreground')}>
-                  {sub}
-                </button>
-              ))}
-            </div>
+            <Popover>
+              <PopoverTrigger className="w-full flex items-center justify-between px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-left">
+                <span className="truncate">
+                  {subjects.length === 0 ? 'Select Subjects' : subjects.join(', ')}
+                </span>
+                <ChevronDown size={14} className="text-muted-foreground flex-shrink-0 ml-2" />
+              </PopoverTrigger>
+              <PopoverContent className="w-80 max-h-60 overflow-y-auto p-2" align="start">
+                <div className="space-y-1">
+                  {SUBJECT_OPTIONS.map(sub => (
+                    <label key={sub} className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer text-xs font-semibold">
+                      <Checkbox
+                        checked={subjects.includes(sub)}
+                        onCheckedChange={() => toggleSubject(sub)}
+                      />
+                      <span>{sub}</span>
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
@@ -249,18 +286,34 @@ function ClassModal({ initial, onSave, onClose }: { initial?: ClassRecord; onSav
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-muted-foreground mb-1">Section Name</label>
-                  <input value={secName} onChange={e => { setSecName(e.target.value); setSecError('') }} placeholder="A, B, C..." className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+                  <Select value={secName} onValueChange={setSecName}>
+                    <SelectTrigger className="w-full h-8 text-[11px]">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['A', 'B', 'C', 'D', 'E', 'F'].map(letter => (
+                        <SelectItem key={letter} value={letter}>Section {letter}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-muted-foreground mb-1">Capacity</label>
-                  <input type="number" value={secCapacity} onChange={e => setSecCapacity(e.target.value)} min="1" className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+                  <input type="number" value={secCapacity} onChange={e => setSecCapacity(e.target.value)} min="1" className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all h-8" />
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-muted-foreground mb-1">Teacher (optional)</label>
-                  <select value={secTeacher} onChange={e => setSecTeacher(e.target.value)} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all appearance-none">
-                    <option value="">— Unassigned —</option>
-                    {TEACHER_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <Select value={secTeacher} onValueChange={setSecTeacher}>
+                    <SelectTrigger className="w-full h-8 text-[11px]">
+                      <SelectValue placeholder="— Unassigned —" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">— Unassigned —</SelectItem>
+                      {TEACHER_OPTIONS.map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               {secError && <p className="text-xs text-accent flex items-center gap-1"><AlertTriangle size={11} /> {secError}</p>}
