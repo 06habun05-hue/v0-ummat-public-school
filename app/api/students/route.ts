@@ -159,7 +159,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, name, branch, class: className, status } = body
+    const { id, name, branch, class: className, status, guardianName, guardianPhone, registrationNumber, address } = body
 
     if (!id || !name || !branch || !className) {
       return NextResponse.json({ error: 'ID, name, branch, and class are required' }, { status: 400 })
@@ -172,6 +172,10 @@ export async function PUT(request: Request) {
         branch,
         class: className,
         status: status || 'Active',
+        guardianName: guardianName || null,
+        guardianPhone: guardianPhone || null,
+        registrationNumber: registrationNumber || null,
+        address: address || null,
       })
       .where(eq(schema.students.id, id))
       .returning()

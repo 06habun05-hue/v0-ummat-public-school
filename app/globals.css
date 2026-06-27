@@ -125,3 +125,24 @@
     display: none; /* Chrome, Safari and Opera */
   }
 }
+
+@media print {
+  aside,
+  header,
+  nav,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  main {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body, html {
+    background: white !important;
+    color: black !important;
+  }
+}
