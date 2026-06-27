@@ -1,10 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, BookOpen, CheckCircle2, Clock, AlertTriangle, Search, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAssessmentStore } from '@/lib/store/assessment-store'
-import { mockSLOs } from '@/lib/data/curriculum'
+import { toast } from 'sonner'
+
+interface AssessmentEvent {
+  id: string
+  sloId: string
+  description: string | null
+  class: string
+  testDate: string
+  testMethod: string
+  teachingMethod: string
+  status: string
+}
 
 const methodColors: Record<string, string> = {
   'MCQs':      'bg-blue-100 text-blue-700 border-blue-200',
@@ -28,25 +38,46 @@ const statusConfig: Record<string, { icon: any; color: string; bg: string; borde
 }
 
 export function AssessmentLog() {
-  const { assessmentEvents, sloList } = useAssessmentStore()
+  const [assessmentEvents, setAssessmentEvents] = useState<AssessmentEvent[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch]           = useState('')
   const [filterClass, setFilterClass] = useState('All')
 
-  // Combine store SLOs with mockSLOs for lookup
-  const allSLOs = [...sloList, ...mockSLOs.filter(m => !sloList.some(s => s.id === m.id))]
-  const classes = ['All', ...Array.from(new Set(assessmentEvents.map(e => e.class)))]
+  const fetchEvents = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        class: filterClass
+      })
+      const res = await fetch(`/api/slo-tracking?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setAssessmentEvents(data.events || [])
+      } else {
+        toast.error('Failed to load tracking logs')
+      }
+    } catch {
+      toast.error('Error loading tracking logs')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchEvents()
+  }, [filterClass])
+
+  const classes = ['All', '10-A', '10-B', '9-A', '9-B', '8-A', '7-B']
 
   const filtered = assessmentEvents.filter(event => {
-    const slo = allSLOs.find(s => s.id === event.sloId)
     const matchesSearch =
       event.sloId.toLowerCase().includes(search.toLowerCase()) ||
-      slo?.description.toLowerCase().includes(search.toLowerCase())
-    return matchesSearch && (filterClass === 'All' || event.class === filterClass)
+      (event.description || '').toLowerCase().includes(search.toLowerCase())
+    return matchesSearch
   })
 
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center bg-background/50 backdrop-blur-sm border border-border p-4 rounded-2xl shadow-sm">
         <div className="relative flex-1">
@@ -71,127 +102,133 @@ export function AssessmentLog() {
         </div>
       </div>
 
-      {/* ── MOBILE TIMELINE CARDS (hidden lg+) ── */}
-      <div className="lg:hidden space-y-3">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-12 text-muted-foreground">
-            <BookOpen size={32} className="mb-3 opacity-30" />
-            <p className="text-sm font-bold">No assessment records found</p>
-          </div>
-        ) : filtered.map(event => {
-          const slo = allSLOs.find(s => s.id === event.sloId)
-          const status = statusConfig[event.status] ?? statusConfig['Pending']
-          const StatusIcon = status.icon
-          return (
-            <div key={event.id} className="bg-background border border-border rounded-2xl p-4 shadow-sm space-y-3">
-              {/* Top row: SLO + Status badge */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <span className="text-[11px] font-black text-primary uppercase tracking-wider">{event.sloId}</span>
-                  <p className="text-xs text-muted-foreground leading-snug mt-0.5 line-clamp-2">{slo?.description}</p>
-                </div>
-                <div className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider flex-shrink-0', status.bg, status.color, status.border)}>
-                  <StatusIcon size={10} />
-                  {event.status === 'Re-test Scheduled' ? 'Re-test' : event.status}
-                </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-sm font-medium">
+          Loading tracking logs...
+        </div>
+      ) : (
+        <>
+          {/* ── MOBILE TIMELINE CARDS (hidden lg+) ── */}
+          <div className="lg:hidden space-y-3">
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center py-12 text-muted-foreground">
+                <BookOpen size={32} className="mb-3 opacity-30" />
+                <p className="text-sm font-bold">No assessment records found</p>
               </div>
+            ) : filtered.map(event => {
+              const status = statusConfig[event.status] ?? statusConfig['Pending']
+              const StatusIcon = status.icon
+              return (
+                <div key={event.id} className="bg-background border border-border rounded-2xl p-4 shadow-sm space-y-3">
+                  {/* Top row: SLO + Status badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[11px] font-black text-primary uppercase tracking-wider">{event.sloId}</span>
+                      <p className="text-xs text-muted-foreground leading-snug mt-0.5 line-clamp-2">{event.description || 'No description available'}</p>
+                    </div>
+                    <div className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider flex-shrink-0', status.bg, status.color, status.border)}>
+                      <StatusIcon size={10} />
+                      {event.status === 'Re-test Scheduled' ? 'Re-test' : event.status}
+                    </div>
+                  </div>
 
-              {/* Meta row */}
-              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/50">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Class</span>
-                  <span className="text-xs font-black text-foreground">{event.class}</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Date</span>
-                  <span className="text-xs font-bold text-foreground">
-                    {new Date(event.testDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Method</span>
-                  <span className={cn('text-[9px] font-black px-1.5 py-0.5 rounded-full border w-fit', methodColors[event.testMethod])}>
-                    {event.testMethod}
-                  </span>
-                </div>
-              </div>
-
-              {/* Teaching method */}
-              <div className="flex items-center gap-2">
-                <BookOpen size={12} className="text-muted-foreground flex-shrink-0" />
-                <span className={cn('text-[9px] font-black px-2 py-0.5 rounded-full border', teachingColors[event.teachingMethod])}>
-                  {event.teachingMethod}
-                </span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* ── DESKTOP TABLE (hidden on mobile) ── */}
-      <div className="hidden lg:block border border-border rounded-2xl overflow-hidden shadow-xl bg-background">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
-                {['SLO Details', 'Class', 'Test Date', 'Assessment Method', 'Teaching Method', 'Status'].map(h => (
-                  <th key={h} className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filtered.map(event => {
-                const slo = allSLOs.find(s => s.id === event.sloId)
-                const status = statusConfig[event.status] ?? statusConfig['Pending']
-                const StatusIcon = status.icon
-                return (
-                  <tr key={event.id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-black text-primary text-xs">{event.sloId}</span>
-                        <span className="text-[11px] text-muted-foreground line-clamp-1 group-hover:line-clamp-none transition-all duration-300">{slo?.description}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-foreground">Class {event.class}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-muted-foreground font-medium">
-                        <Calendar size={13} className="text-primary/60" />
-                        {new Date(event.testDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={cn('px-2.5 py-1 rounded-full text-[10px] font-black uppercase border tracking-wider shadow-sm', methodColors[event.testMethod])}>
+                  {/* Meta row */}
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/50">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Class</span>
+                      <span className="text-xs font-black text-foreground">{event.class}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Date</span>
+                      <span className="text-xs font-bold text-foreground">
+                        {new Date(event.testDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Method</span>
+                      <span className={cn('text-[9px] font-black px-1.5 py-0.5 rounded-full border w-fit', methodColors[event.testMethod])}>
                         {event.testMethod}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <BookOpen size={13} className="text-muted-foreground" />
-                        <span className={cn('px-2.5 py-1 rounded-full text-[10px] font-black uppercase border tracking-wider', teachingColors[event.teachingMethod])}>
-                          {event.teachingMethod}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full border w-fit text-[10px] font-black uppercase tracking-wide', status.bg, status.color, status.border)}>
-                        <StatusIcon size={13} />
-                        {event.status}
-                      </div>
-                    </td>
+                    </div>
+                  </div>
+
+                  {/* Teaching method */}
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={12} className="text-muted-foreground flex-shrink-0" />
+                    <span className={cn('text-[9px] font-black px-2 py-0.5 rounded-full border', teachingColors[event.teachingMethod])}>
+                      {event.teachingMethod}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* ── DESKTOP TABLE (hidden on mobile) ── */}
+          <div className="hidden lg:block border border-border rounded-2xl overflow-hidden shadow-xl bg-background">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border">
+                    {['SLO Details', 'Class', 'Test Date', 'Assessment Method', 'Teaching Method', 'Status'].map(h => (
+                      <th key={h} className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground">{h}</th>
+                    ))}
                   </tr>
-                )
-              })}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground text-sm">
-                    No assessment records found matching your criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filtered.map(event => {
+                    const status = statusConfig[event.status] ?? statusConfig['Pending']
+                    const StatusIcon = status.icon
+                    return (
+                      <tr key={event.id} className="hover:bg-primary/[0.02] transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-black text-primary text-xs">{event.sloId}</span>
+                            <span className="text-[11px] text-muted-foreground line-clamp-1 group-hover:line-clamp-none transition-all duration-300">{event.description || 'No description available'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-bold text-foreground">Class {event.class}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-muted-foreground font-medium">
+                            <Calendar size={13} className="text-primary/60" />
+                            {new Date(event.testDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={cn('px-2.5 py-1 rounded-full text-[10px] font-black uppercase border tracking-wider shadow-sm', methodColors[event.testMethod])}>
+                            {event.testMethod}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <BookOpen size={13} className="text-muted-foreground" />
+                            <span className={cn('px-2.5 py-1 rounded-full text-[10px] font-black uppercase border tracking-wider', teachingColors[event.teachingMethod])}>
+                              {event.teachingMethod}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={cn('flex items-center gap-1.5 px-2.5 py-1 rounded-full border w-fit text-[10px] font-black uppercase tracking-wide', status.bg, status.color, status.border)}>
+                            <StatusIcon size={13} />
+                            {event.status}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground text-sm">
+                        No assessment records found matching your criteria.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Info Card */}
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-4 items-start">

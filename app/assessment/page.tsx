@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { AssessmentTable } from '@/components/assessment/assessment-table'
 import { subjects as curriculumSubjects, chapters as curriculumChapters } from '@/lib/data/curriculum'
 import { useAssessmentStore } from '@/lib/store/assessment-store'
@@ -21,7 +21,8 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 export default function AssessmentPage() {
-  const { sloList, filters, setFilters } = useAssessmentStore()
+  // Keep filters in store so other parts of the app can read the active context
+  const { filters, setFilters } = useAssessmentStore()
 
   const branches = ['Main Campus', 'North Campus', 'South Campus']
   const classes: Record<string, string[]> = {
@@ -30,20 +31,47 @@ export default function AssessmentPage() {
     'South Campus': ['10-A', '9-A', '8-A', '8-B'],
   }
 
-  const activeSLOs = useMemo(() => {
-    return sloList.filter(s => s.subject === filters.subject && s.chapter === filters.chapter && s.class === filters.class)
-  }, [sloList, filters.subject, filters.chapter, filters.class])
+  // DB-sourced data state
+  const [students, setStudents] = useState<any[]>([])
+  const [activeSLOs, setActiveSLOs] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const fetchAssessmentData = async () => {
+    if (!filters.branch || !filters.class || !filters.subject || !filters.chapter) return
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        branch: filters.branch,
+        class: filters.class,
+        subject: filters.subject,
+        chapter: filters.chapter,
+      })
+      const res = await fetch(`/api/assessment?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setStudents(data.students || [])
+        setActiveSLOs(data.slos || [])
+      } else {
+        toast.error('Failed to load assessment data')
+      }
+    } catch {
+      toast.error('Error loading assessment data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchAssessmentData()
+  }, [filters.branch, filters.class, filters.subject, filters.chapter])
 
   const handleExportGrades = () => {
     if (activeSLOs.length === 0) {
       toast.error('No SLOs found for the selected subject and chapter!')
       return
     }
-    const headers = ['Student ID', 'Student Name', ...activeSLOs.map(s => s.id)]
-    
-    // Exporting an empty template with headers
+    const headers = ['Student ID', 'Student Name', ...activeSLOs.map((s: any) => s.id)]
     const csvContent = headers.join(',')
-    
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -75,9 +103,6 @@ export default function AssessmentPage() {
             className="flex-1 sm:flex-none h-10 sm:h-12 px-4 sm:px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-primary hover:text-white transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm"
           >
             Export
-          </Button>
-          <Button className="flex-1 sm:flex-none h-10 sm:h-12 px-6 sm:px-8 rounded-xl sm:rounded-2xl bg-primary text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all animate-pulse">
-            Save Grades
           </Button>
         </motion.div>
       </div>
@@ -192,8 +217,10 @@ export default function AssessmentPage() {
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-primary/5 border border-primary/10 rounded-2xl">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-               <span className="text-[10px] font-black text-foreground uppercase tracking-widest">Unlocked</span>
+               <div className={cn('w-2 h-2 rounded-full', loading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500')} />
+               <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
+                 {loading ? 'Loading...' : 'Unlocked'}
+               </span>
             </div>
             <div className="h-4 w-px bg-border hidden sm:block" />
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
@@ -214,7 +241,20 @@ export default function AssessmentPage() {
         transition={{ delay: 0.2 }}
         className="relative z-10"
       >
-        <AssessmentTable slos={activeSLOs} />
+        {loading ? (
+          <div className="flex items-center justify-center py-24 text-muted-foreground text-sm font-medium">
+            Loading assessment data...
+          </div>
+        ) : (
+          <AssessmentTable
+            slos={activeSLOs}
+            data={students}
+            branch={filters.branch}
+            class={filters.class}
+            subject={filters.subject}
+            chapter={filters.chapter}
+          />
+        )}
       </motion.div>
 
       {/* Info Box */}

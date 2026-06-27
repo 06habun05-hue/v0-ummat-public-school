@@ -91,10 +91,33 @@ export default function StudentProfilePage({ params }: PageProps) {
   }
 
   const handleDownloadPDF = () => {
-    toast.success('Preparing PDF report. Choose "Save as PDF" as the Destination in the Print dialog.')
-    setTimeout(() => {
-      window.print()
-    }, 500)
+    const originalElement = document.getElementById('student-profile-page')
+    if (!originalElement) {
+      toast.error('Could not find profile content')
+      return
+    }
+
+    toast.success('Preparing PDF report. Download will start automatically...')
+
+    const script = document.createElement('script')
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+    script.onload = () => {
+      // Clone element
+      const element = originalElement.cloneNode(true) as HTMLElement
+      // Remove print-hidden elements from clone
+      element.querySelectorAll('.print\\:hidden').forEach(el => el.remove())
+      
+      const opt = {
+        margin:       0.5,
+        filename:     `${student?.name || 'Student'}_Report.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      // @ts-ignore
+      window.html2pdf().set(opt).from(element).save();
+    }
+    document.body.appendChild(script)
   }
 
   const handleSaveProfile = async (updatedData: Partial<StudentData>) => {
@@ -188,7 +211,7 @@ export default function StudentProfilePage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-8 bg-neutral/30 min-h-screen print:p-0 print:bg-white">
+    <div id="student-profile-page" className="p-4 sm:p-6 md:p-8 space-y-8 bg-neutral/30 min-h-screen print:p-0 print:bg-white">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 print:mb-6">
         <div className="flex items-center gap-4">
@@ -430,10 +453,10 @@ function EditStudentProfileModal({
       name: name.trim(),
       branch,
       class: selectedClass,
-      guardianName: guardianName.trim() || null,
-      guardianPhone: guardianPhone.trim() || null,
-      registrationNumber: registrationNumber.trim() || null,
-      address: address.trim() || null,
+      guardianName: guardianName.trim() || undefined,
+      guardianPhone: guardianPhone.trim() || undefined,
+      registrationNumber: registrationNumber.trim() || undefined,
+      address: address.trim() || undefined,
     })
     setSubmitting(false)
   }

@@ -1,10 +1,22 @@
 'use client'
 
-import { useState } from 'react'
-import { useApprovalStore, PendingApproval } from '@/lib/store/approval-store'
+import { useState, useEffect } from 'react'
 import { Check, RotateCcw, Clock, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+
+export interface PendingApproval {
+  id: string
+  teacher: string
+  class: string
+  subject: string
+  chapter: string
+  slo: string
+  dateSubmitted: string
+  studentCount: number
+  status: 'pending' | 'approved' | 'revision'
+  comment: string | null
+}
 
 const tabs = ['Pending', 'Approved', 'Revision Requested'] as const
 type Tab = typeof tabs[number]
@@ -54,14 +66,14 @@ function ApprovalCard({ item, onApprove, onRevise }: {
         <div className="space-y-2">
           <div className="flex gap-2">
             <button
-              onClick={() => { onApprove(); toast.success('Assessment approved') }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary text-white text-xs font-semibold rounded-md hover:bg-primary/90 transition-colors"
+              onClick={() => onApprove()}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary text-white text-xs font-semibold rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
             >
               <Check size={13} /> Approve
             </button>
             <button
               onClick={() => setReviseOpen(!reviseOpen)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-accent text-accent text-xs font-semibold rounded-md hover:bg-accent/5 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-accent text-accent text-xs font-semibold rounded-md hover:bg-accent/5 transition-colors cursor-pointer"
             >
               <RotateCcw size={13} /> Request Revision
             </button>
@@ -79,11 +91,10 @@ function ApprovalCard({ item, onApprove, onRevise }: {
                 onClick={() => {
                   if (!comment.trim()) return
                   onRevise(comment)
-                  toast.info('Revision requested')
                   setReviseOpen(false)
                   setComment('')
                 }}
-                className="w-full py-2 bg-accent text-white text-xs font-semibold rounded-md hover:bg-accent/90 transition-colors"
+                className="w-full py-2 bg-accent text-white text-xs font-semibold rounded-md hover:bg-accent/90 transition-colors cursor-pointer"
               >
                 Send Revision Request
               </button>
@@ -97,9 +108,70 @@ function ApprovalCard({ item, onApprove, onRevise }: {
 
 export default function ApprovalsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Pending')
-  const { pending, approved, revision, approve, requestRevision } = useApprovalStore()
+  const [pending, setPending] = useState<PendingApproval[]>([])
+  const [approved, setApproved] = useState<PendingApproval[]>([])
+  const [revision, setRevision] = useState<PendingApproval[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const lists: Record<Tab, PendingApproval[]> = {
+  const fetchApprovals = async () => {
+    try {
+      const res = await fetch('/api/approvals')
+      if (res.ok) {
+        const data = await res.json()
+        setPending(data.pending || [])
+        setApproved(data.approved || [])
+        setRevision(data.revision || [])
+      } else {
+        toast.error('Failed to load approvals')
+      }
+    } catch {
+      toast.error('Error loading approvals')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchApprovals()
+  }, [])
+
+  const handleApprove = async (id: string) => {
+    try {
+      const res = await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'approve' }),
+      })
+      if (res.ok) {
+        toast.success('Assessment approved successfully!')
+        fetchApprovals()
+      } else {
+        toast.error('Failed to approve assessment')
+      }
+    } catch {
+      toast.error('Error approving assessment')
+    }
+  }
+
+  const handleRevise = async (id: string, comment: string) => {
+    try {
+      const res = await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'revision', comment }),
+      })
+      if (res.ok) {
+        toast.info('Revision requested successfully!')
+        fetchApprovals()
+      } else {
+        toast.error('Failed to request revision')
+      }
+    } catch {
+      toast.error('Error requesting revision')
+    }
+  }
+
+  const lists = {
     'Pending': pending,
     'Approved': approved,
     'Revision Requested': revision,
@@ -129,7 +201,7 @@ export default function ApprovalsPage() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={cn(
-              'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+              'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px cursor-pointer',
               activeTab === tab
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -142,23 +214,29 @@ export default function ApprovalsPage() {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {current.length === 0 ? (
-          <div className="col-span-2 flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <CheckCircle2 size={40} className="mb-3 text-primary/40" />
-            <p className="font-medium">No {activeTab.toLowerCase()} items</p>
-          </div>
-        ) : (
-          current.map(item => (
-            <ApprovalCard
-              key={item.id}
-              item={item}
-              onApprove={activeTab === 'Pending' ? () => approve(item.id) : undefined}
-              onRevise={activeTab === 'Pending' ? (c) => requestRevision(item.id, c) : undefined}
-            />
-          ))
-        )}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-sm font-medium">
+          Loading approval workflows...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {current.length === 0 ? (
+            <div className="col-span-2 flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <CheckCircle2 size={40} className="mb-3 text-primary/40" />
+              <p className="font-medium">No {activeTab.toLowerCase()} items</p>
+            </div>
+          ) : (
+            current.map(item => (
+              <ApprovalCard
+                key={item.id}
+                item={item}
+                onApprove={activeTab === 'Pending' ? () => handleApprove(item.id) : undefined}
+                onRevise={activeTab === 'Pending' ? (cmt) => handleRevise(item.id, cmt) : undefined}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }

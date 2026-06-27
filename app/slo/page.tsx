@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search, Plus, BookOpen, ChevronDown, ChevronUp, X, Filter, Target, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -12,11 +12,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 import { subjects as curriculumSubjects, chapters as curriculumChapters, SLO } from '@/lib/data/curriculum'
-import { useAssessmentStore } from '@/lib/store/assessment-store'
 import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
 
@@ -32,8 +30,9 @@ export default function SLOPage() {
   const [chapterFilter, setChapterFilter] = useState('All')
   const [classFilter, setClassFilter] = useState('All')
   
-  // Dynamic State integration from Zustand
-  const { sloList, addSLO, bulkImportSLOs } = useAssessmentStore()
+  // Local Database State Integration
+  const [sloList, setSloList] = useState<SLO[]>([])
+  const [loading, setLoading] = useState(true)
   
   // Modal states
   const [showModal, setShowModal] = useState(false)
@@ -54,11 +53,36 @@ export default function SLOPage() {
   const [bulkText, setBulkText] = useState('')
   const [parsedSLOs, setParsedSLOs] = useState<SLO[]>([])
 
+  const fetchSLOs = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        class: classFilter,
+        subject: subjectFilter,
+        chapter: chapterFilter
+      })
+      const res = await fetch(`/api/slo?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSloList(data.slos || [])
+      } else {
+        toast.error('Failed to load curriculum entries')
+      }
+    } catch {
+      toast.error('Error loading curriculum entries')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSLOs()
+  }, [classFilter, subjectFilter, chapterFilter])
+
   const filtered = sloList.filter(s =>
-    (search === '' || s.id.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase())) &&
-    (subjectFilter === 'All' || s.subject === subjectFilter) &&
-    (chapterFilter === 'All' || s.chapter === chapterFilter) &&
-    (classFilter === 'All' || s.class === classFilter)
+    search === '' || 
+    s.id.toLowerCase().includes(search.toLowerCase()) || 
+    s.description.toLowerCase().includes(search.toLowerCase())
   )
 
   // Dynamic Curriculum Map computed from active store SLOs and class selection
@@ -78,7 +102,7 @@ export default function SLOPage() {
   }, [sloList, classFilter])
 
   // Single SLO commit handler
-  const handleCommitSingle = () => {
+  const handleCommitSingle = async () => {
     if (!singleSlo.id.trim() || !singleSlo.description.trim()) {
       toast.error('Outcome Code and Description are required!')
       return
@@ -91,19 +115,32 @@ export default function SLOPage() {
       return
     }
 
-    const newEntry: SLO = {
-      id: newId,
-      description: singleSlo.description.trim(),
-      subject: singleSlo.subject,
-      chapter: singleSlo.chapter,
-      class: singleSlo.class,
-      ncp: singleSlo.ncp.trim() || 'NCP-GENERIC'
+    try {
+      const res = await fetch('/api/slo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newId,
+          description: singleSlo.description.trim(),
+          class: singleSlo.class,
+          subject: singleSlo.subject,
+          chapter: singleSlo.chapter,
+          ncp: singleSlo.ncp.trim() || 'NCP-GENERIC'
+        })
+      })
+
+      if (res.ok) {
+        toast.success(`Successfully provisioned node ${newId}!`)
+        setShowModal(false)
+        setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', class: '10-A', description: '', ncp: '', ncpDesc: '' })
+        fetchSLOs()
+      } else {
+        const errData = await res.json()
+        toast.error(errData.error || 'Failed to create learning outcome')
+      }
+    } catch {
+      toast.error('Error saving learning outcome')
     }
-    
-    addSLO(newEntry)
-    toast.success(`Successfully provisioned node ${newEntry.id}!`)
-    setShowModal(false)
-    setSingleSlo({ id: '', subject: 'English', chapter: 'Chapter 1', class: '10-A', description: '', ncp: '', ncpDesc: '' })
   }
 
   // Unified SLO record normalization and cleaning pipeline
@@ -298,7 +335,7 @@ export default function SLOPage() {
           return
         }
 
-        // Smart Column Mapping: check first 5 rows to locate a header row
+        // Smart Column Mapping
         let headerRowIndex = 0
         let headers: string[] = []
         
@@ -311,10 +348,9 @@ export default function SLOPage() {
           }
         }
 
-        // Fallback: assume column positions
         if (headers.length === 0) {
           headers = ['outcome code', 'objective description', 'subject', 'curriculum unit', 'class', 'ncp alignment']
-          headerRowIndex = -1 // Start reading from first row directly
+          headerRowIndex = -1
         }
 
         const colIndex = {
@@ -387,17 +423,32 @@ export default function SLOPage() {
   }
 
   // Commit imported rows to active database
-  const handleCommitBulk = () => {
+  const handleCommitBulk = async () => {
     if (parsedSLOs.length === 0) {
       toast.error('No rows found. Paste Excel data or drop a CSV file first!')
       return
     }
-    
-    bulkImportSLOs(parsedSLOs)
-    toast.success(`Successfully imported and committed ${parsedSLOs.length} SLO records!`)
-    setShowBulkModal(false)
-    setBulkText('')
-    setParsedSLOs([])
+
+    try {
+      const res = await fetch('/api/slo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slos: parsedSLOs })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        toast.success(`Successfully imported and committed ${data.count} SLO records!`)
+        setShowBulkModal(false)
+        setBulkText('')
+        setParsedSLOs([])
+        fetchSLOs()
+      } else {
+        toast.error('Failed to commit bulk imports')
+      }
+    } catch {
+      toast.error('Error committing bulk imports')
+    }
   }
 
   // Functional CSV exporter
@@ -435,7 +486,7 @@ export default function SLOPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">Curriculum Intelligence</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Orchestrate learning outcomes and architectural mapping</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Orchestrate learning outcomes and curriculum mapping</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2.5 w-full sm:w-auto">
           <Button onClick={() => setShowBulkModal(true)} variant="outline" className="flex-1 sm:flex-none h-12 px-6 rounded-xl sm:rounded-2xl border-border bg-background hover:bg-muted text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-sm">
@@ -486,7 +537,7 @@ export default function SLOPage() {
                     <input
                       value={search}
                       onChange={e => setSearch(e.target.value)}
-                      placeholder="Search infrastructure..."
+                      placeholder="Search curriculum registry..."
                       className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl sm:rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
                     />
                   </div>
@@ -541,34 +592,48 @@ export default function SLOPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {filtered.map((slo) => (
-                        <tr key={slo.id} className="group hover:bg-primary/[0.02] transition-colors">
-                          <td className="px-6 py-5 font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</td>
-                          <td className="px-6 py-5">
-                             <div className="max-w-md">
-                               <span className="text-sm font-bold text-foreground leading-snug">{slo.description}</span>
-                             </div>
-                          </td>
-                          <td className="px-6 py-5">
-                             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-black uppercase tracking-widest px-3 py-1">
-                               Class {slo.class}
-                             </Badge>
-                          </td>
-                          <td className="px-6 py-5">
-                             <Badge variant="secondary" className="bg-muted text-foreground border-border text-[10px] font-black uppercase tracking-widest px-3 py-1">
-                               {slo.subject}
-                             </Badge>
-                          </td>
-                          <td className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">{slo.chapter}</td>
-                          <td className="px-6 py-5 font-mono text-[10px] font-black text-muted-foreground/60">{slo.ncp}</td>
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-2">
-                               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                               <span className="text-[10px] font-black uppercase tracking-widest text-primary">Active</span>
-                            </div>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground text-sm font-medium">
+                            Loading curriculum entries...
                           </td>
                         </tr>
-                      ))}
+                      ) : filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground text-sm font-medium">
+                            No learning outcomes found.
+                          </td>
+                        </tr>
+                      ) : (
+                        filtered.map((slo) => (
+                          <tr key={slo.id} className="group hover:bg-primary/[0.02] transition-colors">
+                            <td className="px-6 py-5 font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</td>
+                            <td className="px-6 py-5">
+                               <div className="max-w-md">
+                                 <span className="text-sm font-bold text-foreground leading-snug">{slo.description}</span>
+                               </div>
+                            </td>
+                            <td className="px-6 py-5">
+                               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-black uppercase tracking-widest px-3 py-1">
+                                 Class {slo.class}
+                               </Badge>
+                            </td>
+                            <td className="px-6 py-5">
+                               <Badge variant="secondary" className="bg-muted text-foreground border-border text-[10px] font-black uppercase tracking-widest px-3 py-1">
+                                 {slo.subject}
+                               </Badge>
+                            </td>
+                            <td className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">{slo.chapter}</td>
+                            <td className="px-6 py-5 font-mono text-[10px] font-black text-muted-foreground/60">{slo.ncp}</td>
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-2">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">Active</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -576,38 +641,44 @@ export default function SLOPage() {
 
               {/* SLO List: Mobile Cards */}
               <div className="lg:hidden space-y-4">
-                {filtered.map((slo) => (
-                  <div key={slo.id} className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                       <span className="font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</span>
-                       <div className="flex items-center gap-1.5">
-                         <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                         <span className="text-[9px] font-black uppercase tracking-widest text-primary">Active</span>
-                       </div>
+                {loading ? (
+                  <p className="text-center text-muted-foreground py-10 text-xs font-semibold">Loading...</p>
+                ) : filtered.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-10 text-xs font-semibold">No outcomes found.</p>
+                ) : (
+                  filtered.map((slo) => (
+                    <div key={slo.id} className="bg-background border border-border rounded-2xl p-5 shadow-sm space-y-4">
+                      <div className="flex items-center justify-between">
+                         <span className="font-mono text-xs font-black text-primary uppercase tracking-tighter">{slo.id}</span>
+                         <div className="flex items-center gap-1.5">
+                           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                           <span className="text-[9px] font-black uppercase tracking-widest text-primary">Active</span>
+                         </div>
+                      </div>
+                      
+                      <p className="text-sm font-bold text-foreground leading-relaxed">{slo.description}</p>
+                      
+                      <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border/50">
+                        <div className="space-y-1">
+                          <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Class</p>
+                          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                            {slo.class}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Subject</p>
+                          <Badge variant="secondary" className="bg-muted text-foreground border-border text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                            {slo.subject}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">NCP Alignment</p>
+                          <p className="text-[10px] font-mono font-bold text-muted-foreground">{slo.ncp}</p>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <p className="text-sm font-bold text-foreground leading-relaxed">{slo.description}</p>
-                    
-                    <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border/50">
-                      <div className="space-y-1">
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Class</p>
-                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
-                          {slo.class}
-                        </Badge>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Subject</p>
-                        <Badge variant="secondary" className="bg-muted text-foreground border-border text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
-                          {slo.subject}
-                        </Badge>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">NCP Alignment</p>
-                        <p className="text-[10px] font-mono font-bold text-muted-foreground">{slo.ncp}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -685,7 +756,7 @@ export default function SLOPage() {
                   <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Curriculum Architectural Node</p>
                 </div>
                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-muted rounded-xl transition-colors"><X size={20} /></button>
-              </div>
+               </div>
 
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-hide">
                 <div>
@@ -809,7 +880,6 @@ export default function SLOPage() {
               </div>
 
               <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1 scrollbar-hide">
-                {/* Drag and Drop Zone */}
                 <div 
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleFileDrop}
@@ -832,7 +902,6 @@ export default function SLOPage() {
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
-                {/* Paste Area */}
                 <div>
                   <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 ml-1">Paste Excel Spreadsheet Range</label>
                   <textarea 
@@ -847,7 +916,6 @@ export default function SLOPage() {
                   />
                 </div>
 
-                {/* Preview Grid */}
                 {parsedSLOs.length > 0 && (
                   <div className="border border-border rounded-2xl overflow-hidden shadow-sm bg-muted/10">
                     <div className="px-4 py-2.5 bg-muted/50 border-b border-border flex justify-between items-center">

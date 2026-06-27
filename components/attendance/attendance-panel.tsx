@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { CheckCircle2, XCircle, Clock, Search, Users, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -14,7 +14,8 @@ interface StudentAttendance {
 }
 
 interface AttendancePanelProps {
-  students?: StudentAttendance[]
+  students: StudentAttendance[]
+  onSave: (attendanceList: { studentId: string; status: 'present' | 'absent' | 'late' }[]) => Promise<void>
 }
 
 const statusConfig = {
@@ -60,15 +61,18 @@ const weekDayStatusConfig = {
   null:    { label: '–', bg: 'bg-muted/50',   color: 'text-muted-foreground', border: 'border-border' },
 }
 
-export function AttendancePanel({ students: initialStudents = [] }: AttendancePanelProps) {
+export function AttendancePanel({ students: initialStudents = [], onSave }: AttendancePanelProps) {
   const { role } = useUIStore()
   const isReadOnly = role !== 'TEACHER'
 
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('daily')
   const [searchQuery, setSearchQuery] = useState('')
-  const [students, setStudents] = useState<StudentAttendance[]>(
-    initialStudents.length > 0 ? initialStudents : []
-  )
+  const [students, setStudents] = useState<StudentAttendance[]>(initialStudents)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setStudents(initialStudents)
+  }, [initialStudents])
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
@@ -94,9 +98,23 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
     return { present, absent, late, total, marked: present + absent + late }
   }, [students])
 
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const records = students.map(s => ({
+        studentId: s.id,
+        status: s.status || 'present'
+      }))
+      await onSave(records)
+    } catch {
+      // Error handled by parent
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
-
       {/* ── Header Controls ── */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         {/* View Toggle */}
@@ -149,151 +167,81 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
       {/* ── Stats Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Present', value: stats.present, icon: CheckCircle2, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Absent',  value: stats.absent,  icon: XCircle,      color: 'text-accent',  bg: 'bg-accent/10'  },
-          { label: 'Late',    value: stats.late,    icon: Clock,        color: 'text-warning', bg: 'bg-warning/10' },
-          { label: 'Marked',  value: `${stats.marked}/${stats.total}`, icon: Users, color: 'text-muted-foreground', bg: 'bg-muted' },
-        ].map(card => (
-          <div key={card.label} className="bg-background border border-border rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', card.bg)}>
-              <card.icon size={18} className={card.color} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{card.label}</p>
-              <p className="text-xl font-black text-foreground leading-tight">{card.value}</p>
-            </div>
+          { label: 'Total Enrolled', val: stats.total, color: 'text-foreground' },
+          { label: 'Present Today', val: stats.present, color: 'text-primary' },
+          { label: 'Absent Today', val: stats.absent, color: 'text-accent' },
+          { label: 'Late Arrivals', val: stats.late, color: 'text-warning' },
+        ].map((card, i) => (
+          <div key={i} className="bg-background border border-border rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{card.label}</span>
+            <span className={cn('text-2xl font-black mt-1', card.color)}>{card.val}</span>
           </div>
         ))}
       </div>
 
-      {/* ── DAILY VIEW ── */}
-      {viewMode === 'daily' && (
+      {viewMode === 'daily' ? (
         <>
-          {/* Mobile card list (hidden on lg+) */}
-          <div className="lg:hidden space-y-2.5">
-            {filteredStudents.map(student => (
-              <div key={student.id} className="bg-background border border-border rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-3 mb-3">
+          {/* Daily list / grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredStudents.map(student => {
+              const status = student.status || 'present'
+              return (
+                <div key={student.id} className="bg-background border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xs font-black flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xs font-black">
                       {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
-                    <p className="text-sm font-bold text-foreground">{student.name}</p>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{student.name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Status: <span className="font-semibold uppercase">{status}</span></p>
+                    </div>
                   </div>
-                  {student.status && (
-                    <span className={cn(
-                      'text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full border',
-                      statusConfig[student.status].bg,
-                      statusConfig[student.status].color,
-                      statusConfig[student.status].border
-                    )}>
-                      {statusConfig[student.status].label}
-                    </span>
-                  )}
+                  <div className="flex gap-1.5">
+                    {(['present', 'absent', 'late'] as const).map(s => {
+                      const cfg = statusConfig[s]
+                      const isActive = status === s
+                      const Icon = cfg.icon
+                      return (
+                        <button
+                          key={s}
+                          disabled={isReadOnly}
+                          onClick={() => markStatus(student.id, s)}
+                          className={cn(
+                            'w-9 h-9 rounded-xl flex items-center justify-center border transition-all',
+                            isActive ? `${cfg.activeBg} ${cfg.activeText} border-transparent shadow-md scale-105` : `${cfg.bg} ${cfg.color} ${cfg.border} hover:bg-muted`
+                          )}
+                          title={cfg.label}
+                        >
+                          <Icon size={16} />
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-
-                {/* Large touch-friendly P / L / A buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                  {(['present', 'late', 'absent'] as const).map(status => {
-                    const cfg = statusConfig[status]
-                    const isActive = student.status === status
-                    return (
-                      <button
-                        key={status}
-                        disabled={isReadOnly}
-                        onClick={() => markStatus(student.id, status)}
-                        className={cn(
-                          'h-12 rounded-xl flex items-center justify-center gap-2 border-2 transition-all active:scale-95 font-black text-xs uppercase tracking-wide',
-                          isActive
-                            ? `${cfg.activeBg} ${cfg.activeText} border-transparent shadow-lg`
-                            : `bg-background border-border text-muted-foreground`,
-                          isReadOnly && 'cursor-default opacity-60'
-                        )}
-                      >
-                        <cfg.icon size={15} />
-                        {cfg.short}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table (hidden on mobile) */}
-          <div className="hidden lg:block border border-border rounded-2xl bg-background overflow-hidden shadow-sm">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-6 py-4 text-left font-black text-[10px] uppercase tracking-widest text-muted-foreground sticky left-0 bg-muted/50 z-10">Student</th>
-                  <th className="px-6 py-4 text-center font-black text-[10px] uppercase tracking-widest text-muted-foreground">Attendance Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredStudents.map(student => (
-                  <tr key={student.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 font-bold text-foreground sticky left-0 bg-background z-10 border-r border-border">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-[10px] font-black">
-                          {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </div>
-                        {student.name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-3">
-                        {(['present', 'late', 'absent'] as const).map(status => {
-                          const cfg = statusConfig[status]
-                          const isActive = student.status === status
-                          return (
-                            <button
-                              key={status}
-                              disabled={isReadOnly}
-                              onClick={() => markStatus(student.id, status)}
-                              className={cn(
-                                'flex flex-col items-center gap-1 px-5 py-2 rounded-xl border transition-all min-w-[72px]',
-                                isActive
-                                  ? `${cfg.bg} ${cfg.color} ${cfg.border} ring-2 ${cfg.ring} shadow-sm`
-                                  : 'bg-background text-muted-foreground border-border hover:bg-muted',
-                                isReadOnly && 'cursor-default'
-                              )}
-                            >
-                              <cfg.icon size={15} />
-                              <span className="text-[9px] font-black uppercase">{cfg.label}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              )
+            })}
           </div>
         </>
-      )}
-
-      {/* ── WEEKLY VIEW ── */}
-      {viewMode === 'weekly' && (
+      ) : (
         <>
-          {/* Mobile weekly cards */}
-          <div className="lg:hidden space-y-2.5">
+          {/* Mobile weekly list */}
+          <div className="lg:hidden space-y-3">
             {filteredStudents.map(student => (
-              <div key={student.id} className="bg-background border border-border rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xs font-black flex-shrink-0">
+              <div key={student.id} className="bg-background border border-border rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-[10px] font-black">
                     {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </div>
-                  <p className="text-sm font-bold text-foreground">{student.name}</p>
+                  <p className="text-xs font-bold text-foreground">{student.name}</p>
                 </div>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-5 gap-2 pt-2 border-t border-border">
                   {days.map(day => {
                     const status = student.history?.[day] ?? null
                     const cfg = weekDayStatusConfig[status as keyof typeof weekDayStatusConfig] ?? weekDayStatusConfig.null
                     return (
                       <div key={day} className="flex flex-col items-center gap-1">
-                        <span className="text-[9px] font-black text-muted-foreground uppercase">{day}</span>
-                        <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-black border', cfg.bg, cfg.color, cfg.border)}>
+                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">{day}</span>
+                        <div className={cn('w-7 h-7 flex items-center justify-center rounded-lg text-[9px] font-black border', cfg.bg, cfg.color, cfg.border)}>
                           {cfg.label}
                         </div>
                       </div>
@@ -351,10 +299,11 @@ export function AttendancePanel({ students: initialStudents = [] }: AttendancePa
       {!isReadOnly && (
         <div className="flex justify-end pt-1">
           <button
-            onClick={() => toast.success('Attendance records saved successfully')}
-            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-2xl hover:bg-primary/90 transition-all font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-2xl hover:bg-primary/90 transition-all font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Check size={16} /> Save Attendance
+            <Check size={16} /> {saving ? 'Saving...' : 'Save Attendance'}
           </button>
         </div>
       )}

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AttendancePanel } from '@/components/attendance/attendance-panel'
 import { Calendar as CalendarIcon, Filter, MapPin, BookOpen, ChevronRight } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
   Select,
@@ -20,6 +20,7 @@ import {
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 
 export default function AttendancePage() {
   const [filters, setFilters] = useState({
@@ -30,6 +31,8 @@ export default function AttendancePage() {
   })
 
   const [viewMode, setViewMode] = useState<'date' | 'week'>('date')
+  const [students, setStudents] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
   const branches = ['Main Campus', 'North Campus', 'South Campus']
   const classes: Record<string, string[]> = {
@@ -38,6 +41,60 @@ export default function AttendancePage() {
     'South Campus': ['10-A', '9-A', '8-A', '8-B'],
   }
   const subjects = ['English', 'Mathematics', 'Science', 'Social Studies', 'Islamic Studies']
+
+  const fetchAttendance = async () => {
+    setLoading(true)
+    try {
+      const formattedDate = format(filters.date, 'yyyy-MM-dd')
+      const params = new URLSearchParams({
+        branch: filters.branch,
+        class: filters.class,
+        subject: filters.subject,
+        date: formattedDate,
+      })
+      const res = await fetch(`/api/attendance?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setStudents(data.students || [])
+      } else {
+        toast.error('Failed to load attendance records')
+      }
+    } catch {
+      toast.error('Error loading attendance records')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchAttendance()
+  }, [filters.branch, filters.class, filters.subject, filters.date])
+
+  const handleSaveAttendance = async (attendanceList: { studentId: string; status: 'present' | 'absent' | 'late' }[]) => {
+    try {
+      const formattedDate = format(filters.date, 'yyyy-MM-dd')
+      const res = await fetch('/api/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branch: filters.branch,
+          class: filters.class,
+          subject: filters.subject,
+          date: formattedDate,
+          attendanceList,
+        }),
+      })
+
+      if (res.ok) {
+        toast.success('Attendance records saved successfully!')
+        fetchAttendance()
+      } else {
+        toast.error('Failed to save attendance records')
+      }
+    } catch {
+      toast.error('Error saving attendance records')
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
@@ -195,7 +252,7 @@ export default function AttendancePage() {
             Class: <span className="text-primary font-black ml-1">{filters.class}</span> • <span className="text-primary font-black">{filters.subject}</span>
           </p>
           <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase tracking-widest">
-            Syncing <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            {loading ? 'Syncing...' : 'Synced'} <div className={cn("w-1.5 h-1.5 rounded-full", loading ? "bg-amber-400 animate-pulse" : "bg-primary")} />
           </div>
         </div>
       </motion.div>
@@ -206,7 +263,13 @@ export default function AttendancePage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <AttendancePanel />
+        {loading ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground text-sm font-medium">
+            Loading attendance records...
+          </div>
+        ) : (
+          <AttendancePanel students={students} onSave={handleSaveAttendance} />
+        )}
       </motion.div>
     </div>
   )

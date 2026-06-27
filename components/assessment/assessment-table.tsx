@@ -9,7 +9,6 @@ import {
 import { AlertCircle, Check, Trash2, Loader2, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { useAssessmentStore, getGradesKey, StudentAssessment } from '@/lib/store/assessment-store'
 import { useUIStore } from '@/lib/store/ui-store'
 import { SLO } from '@/lib/data/curriculum'
 
@@ -22,6 +21,10 @@ interface StudentAssessment {
 interface AssessmentTableProps {
   slos: SLO[]
   data?: StudentAssessment[]
+  branch: string
+  class: string
+  subject: string
+  chapter: string
 }
 
 const grades = [1, 2, 3, 4]
@@ -47,78 +50,139 @@ const gradeBtnMap: Record<number, string> = {
   1: 'bg-accent text-white shadow-accent/40',
 }
 
-export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTableProps) {
+export function AssessmentTable({
+  slos,
+  data: initialData = [],
+  branch,
+  class: className,
+  subject,
+  chapter,
+}: AssessmentTableProps) {
   const { role } = useUIStore()
   const isReadOnly = role !== 'TEACHER'
-  const { filters, gradesData, updateSingleGrade, clearGrades, setGradesData, saveStatus, setSaveStatus } = useAssessmentStore()
-  const key = getGradesKey(filters.branch, filters.class, filters.subject, filters.chapter)
-  
-  const defaultStudents: StudentAssessment[] = []
-  
-  const data = gradesData[key] || defaultStudents
+
+  // Local grade state — initialized from DB-fetched data prop
+  const [data, setData] = useState<StudentAssessment[]>(initialData)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+
+  // Keep local data in sync when the parent fetches fresh data
+  useEffect(() => {
+    setData(initialData)
+  }, [initialData])
 
   const [activeStudent, setActiveStudent] = useState<StudentAssessment | null>(null)
   const [editingCell, setEditingCell] = useState<{
     rowIndex: number
     columnId: string
   } | null>(null)
-  
+
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const tableRef = useRef<HTMLTableElement>(null)
 
-  // Autosave logic
-  const triggerAutosave = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setSaveStatus('saving')
-    timeoutRef.current = setTimeout(() => {
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
-    }, 1500)
-  }, [setSaveStatus])
+  // Update a single cell in local state
+  const updateSingleGrade = useCallback(
+    (rowIndex: number, sloId: string, value: number | null) => {
+      setData((prev) => {
+        const updated = [...prev]
+        updated[rowIndex] = { ...updated[rowIndex], [sloId]: value }
+        return updated
+      })
+    },
+    []
+  )
+
+  // Clear all grades locally
+  const clearAllGrades = useCallback(() => {
+    setData((prev) =>
+      prev.map((student) => {
+        const cleared: StudentAssessment = { id: student.id, name: student.name }
+        slos.forEach((slo) => {
+          cleared[slo.id] = null
+        })
+        return cleared
+      })
+    )
+  }, [slos])
+
+  // Autosave — POST current grade matrix to DB
+  const triggerAutosave = useCallback(
+    (latestData: StudentAssessment[]) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      setSaveStatus('saving')
+      timeoutRef.current = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/assessment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              branch,
+              class: className,
+              subject,
+              chapter,
+              grades: latestData,
+            }),
+          })
+          if (res.ok) {
+            setSaveStatus('saved')
+            setTimeout(() => setSaveStatus('idle'), 2000)
+          } else {
+            setSaveStatus('idle')
+            toast.error('Failed to save grades')
+          }
+        } catch {
+          setSaveStatus('idle')
+          toast.error('Error saving grades')
+        }
+      }, 1500)
+    },
+    [branch, className, subject, chapter]
+  )
 
   // Paste Logic
-  const handlePaste = useCallback((e: React.ClipboardEvent) => {
-    if (!editingCell || isReadOnly) return
-    
-    e.preventDefault()
-    const text = e.clipboardData.getData('text')
-    const rows = text.split(/\r?\n/).filter(row => row.length > 0)
-    const grid = rows.map(row => row.split('\t'))
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      if (!editingCell || isReadOnly) return
 
-    const newData = [...data]
-    const { rowIndex, columnId } = editingCell
-    const startColIndex = slos.findIndex(s => s.id === columnId)
+      e.preventDefault()
+      const text = e.clipboardData.getData('text')
+      const rows = text.split(/\r?\n/).filter((row) => row.length > 0)
+      const grid = rows.map((row) => row.split('\t'))
 
-    if (startColIndex === -1) return
+      setData((prev) => {
+        const newData = [...prev]
+        const { rowIndex, columnId } = editingCell
+        const startColIndex = slos.findIndex((s) => s.id === columnId)
+        if (startColIndex === -1) return prev
 
-    grid.forEach((pastedRow, rOffset) => {
-      const targetRowIndex = rowIndex + rOffset
-      if (targetRowIndex < newData.length) {
-        pastedRow.forEach((pastedValue, cOffset) => {
-          const targetColIndex = startColIndex + cOffset
-          if (targetColIndex < slos.length) {
-            const sloId = slos[targetColIndex].id
-            const val = parseInt(pastedValue.trim())
-            if (!isNaN(val) && grades.includes(val)) {
-              newData[targetRowIndex] = { 
-                ...newData[targetRowIndex], 
-                [sloId]: val 
+        grid.forEach((pastedRow, rOffset) => {
+          const targetRowIndex = rowIndex + rOffset
+          if (targetRowIndex < newData.length) {
+            pastedRow.forEach((pastedValue, cOffset) => {
+              const targetColIndex = startColIndex + cOffset
+              if (targetColIndex < slos.length) {
+                const sloId = slos[targetColIndex].id
+                const val = parseInt(pastedValue.trim())
+                if (!isNaN(val) && grades.includes(val)) {
+                  newData[targetRowIndex] = {
+                    ...newData[targetRowIndex],
+                    [sloId]: val,
+                  }
+                }
               }
-            }
+            })
           }
         })
-      }
-    })
-
-    setGradesData(key, newData)
-    triggerAutosave()
-    toast.success('Pasted grades successfully')
-  }, [editingCell, data, slos, triggerAutosave])
-
-  const columnHelper = createColumnHelper<StudentAssessment>()
+        triggerAutosave(newData)
+        toast.success('Pasted grades successfully')
+        return newData
+      })
+    },
+    [editingCell, slos, triggerAutosave, isReadOnly]
+  )
 
   const columns: ColumnDef<StudentAssessment>[] = [
-    columnHelper.accessor('name', {
+    {
+      accessorKey: 'name',
       header: 'Student Name',
       size: 200,
       cell: (info) => (
@@ -126,33 +190,33 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
           {info.getValue() as string}
         </div>
       ),
-    }),
-    ...slos.map((slo) =>
-      columnHelper.accessor(slo.id, {
-        header: () => (
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-primary">{slo.id}</span>
-            <span className="text-[9px] lowercase opacity-70 truncate max-w-[80px] leading-tight" title={slo.description}>
-              {slo.description}
-            </span>
-          </div>
-        ),
-        size: 100,
-        cell: (info) => {
-          const rowIndex = info.row.index
-          const columnId = slo.id
-          const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId
-          const value = info.getValue() as number | null
+    },
+    ...slos.map((slo) => ({
+      accessorKey: slo.id,
+      header: () => (
+        <div className="flex flex-col gap-1">
+          <span className="font-bold text-primary">{slo.id}</span>
+          <span className="text-[9px] lowercase opacity-70 truncate max-w-[80px] leading-tight" title={slo.description}>
+            {slo.description}
+          </span>
+        </div>
+      ),
+      size: 100,
+      cell: (info: any) => {
+        const rowIndex = info.row.index
+        const columnId = slo.id
+        const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId
+        const value = info.getValue() as number | null
 
-          return (
-            <div
-              className={cn(
-                'h-14 flex items-center px-2 cursor-pointer transition-all border-r border-border last:border-r-0 relative group/cell',
-                isEditing ? 'bg-primary/10 ring-2 ring-primary ring-inset z-20 shadow-inner' : 'hover:bg-muted/50',
-                !value && !isEditing && 'bg-warning/5'
-              )}
-              onClick={() => !isReadOnly && setEditingCell({ rowIndex, columnId })}
-            >
+        return (
+          <div
+            className={cn(
+              'h-14 flex items-center px-2 cursor-pointer transition-all border-r border-border last:border-r-0 relative group/cell',
+              isEditing ? 'bg-primary/10 ring-2 ring-primary ring-inset z-20 shadow-inner' : 'hover:bg-muted/50',
+              !value && !isEditing && 'bg-warning/5'
+            )}
+            onClick={() => !isReadOnly && setEditingCell({ rowIndex, columnId })}
+          >
               {isEditing ? (
                 <input
                   autoFocus
@@ -164,11 +228,15 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                     const char = e.target.value.slice(-1)
                     const val = parseInt(char)
                     if (grades.includes(val)) {
-                      updateSingleGrade(key, rowIndex, columnId, val)
-                      triggerAutosave()
-                      
-                      // Auto-advance logic
-                      const currentSloIndex = slos.findIndex(s => s.id === columnId)
+                      updateSingleGrade(rowIndex, columnId, val)
+                      setData((prev) => {
+                        const updated = [...prev]
+                        updated[rowIndex] = { ...updated[rowIndex], [columnId]: val }
+                        triggerAutosave(updated)
+                        return updated
+                      })
+                      // Auto-advance
+                      const currentSloIndex = slos.findIndex((s) => s.id === columnId)
                       if (currentSloIndex < slos.length - 1) {
                         setEditingCell({ rowIndex, columnId: slos[currentSloIndex + 1].id })
                       } else if (rowIndex < data.length - 1) {
@@ -177,11 +245,17 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                         setEditingCell(null)
                       }
                     } else if (char === '') {
-                      updateSingleGrade(key, rowIndex, columnId, null)
+                      updateSingleGrade(rowIndex, columnId, null)
+                      setData((prev) => {
+                        const updated = [...prev]
+                        updated[rowIndex] = { ...updated[rowIndex], [columnId]: null }
+                        triggerAutosave(updated)
+                        return updated
+                      })
                     }
                   }}
                   onKeyDown={(e) => {
-                    const currentSloIndex = slos.findIndex(s => s.id === columnId)
+                    const currentSloIndex = slos.findIndex((s) => s.id === columnId)
                     if (e.key === 'ArrowRight' && currentSloIndex < slos.length - 1) {
                       setEditingCell({ rowIndex, columnId: slos[currentSloIndex + 1].id })
                     } else if (e.key === 'ArrowLeft' && currentSloIndex > 0) {
@@ -196,8 +270,8 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                   }}
                   onBlur={() => {
                     setTimeout(() => {
-                      setEditingCell(prev => 
-                        (prev?.rowIndex === rowIndex && prev?.columnId === columnId) ? null : prev
+                      setEditingCell((prev) =>
+                        prev?.rowIndex === rowIndex && prev?.columnId === columnId ? null : prev
                       )
                     }, 50)
                   }}
@@ -205,10 +279,12 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
               ) : (
                 <div className="flex items-center justify-center w-full">
                   {value ? (
-                    <span className={cn(
-                      'w-8 h-8 flex items-center justify-center rounded-lg text-sm font-black border transition-all shadow-sm',
-                      gradeColorMap[value]
-                    )}>
+                    <span
+                      className={cn(
+                        'w-8 h-8 flex items-center justify-center rounded-lg text-sm font-black border transition-all shadow-sm',
+                        gradeColorMap[value]
+                      )}
+                    >
                       {value}
                     </span>
                   ) : (
@@ -231,12 +307,12 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
 
   // Calculate averages dynamically
   const getAverage = (sloId: string) => {
-    const values = data.map(s => s[sloId]).filter(v => v !== null) as number[]
+    const values = data.map((s) => s[sloId]).filter((v) => v !== null) as number[]
     if (values.length === 0) return '-'
     return (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)
   }
 
-  const studentRowIndex = (studentId: string) => data.findIndex(s => s.id === studentId)
+  const studentRowIndex = (studentId: string) => data.findIndex((s) => s.id === studentId)
 
   return (
     <div className="space-y-4" onPaste={handlePaste}>
@@ -273,10 +349,10 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
         </div>
         {!isReadOnly && (
           <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => {
-                  if(confirm('Clear all grades for this chapter?')) {
-                    clearGrades(key)
+                  if (confirm('Clear all grades for this chapter?')) {
+                    clearAllGrades()
                     toast.success('Grades cleared')
                   }
                 }}
@@ -297,8 +373,8 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
           </div>
         ) : (
           data.map((student) => {
-            const filledCount = slos.filter(s => student[s.id] !== null && student[s.id] !== undefined).length
-            const avgVals = slos.map(s => student[s.id]).filter(v => v !== null) as number[]
+            const filledCount = slos.filter((s) => student[s.id] !== null && student[s.id] !== undefined).length
+            const avgVals = slos.map((s) => student[s.id]).filter((v) => v !== null) as number[]
             const avg = avgVals.length > 0 ? (avgVals.reduce((a, b) => a + b, 0) / avgVals.length).toFixed(1) : null
 
             return (
@@ -336,7 +412,7 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                   </div>
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
-                  {slos.slice(0, 6).map(slo => {
+                  {slos.slice(0, 6).map((slo) => {
                     const val = student[slo.id] as number | null
                     return (
                       <span key={slo.id} className={cn('px-2 py-0.5 rounded-full text-[9px] font-black border',
@@ -406,7 +482,7 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
           <button className="flex items-center justify-center gap-2 px-6 py-2.5 bg-background border-2 border-primary/20 text-primary rounded-xl hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest active:scale-95">
             Download PDF Report
           </button>
-          <button 
+          <button
             onClick={() => toast.success('Grades locked and submitted for approval')}
             className="flex items-center justify-center gap-2 px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 active:scale-95"
           >
@@ -431,7 +507,7 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                 <div>
                   <p className="font-black text-base text-foreground leading-tight">{activeStudent.name}</p>
                   <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
-                    {filters.class} · {filters.subject} · {filters.chapter}
+                    {className} · {subject} · {chapter}
                   </p>
                 </div>
               </div>
@@ -453,16 +529,21 @@ export function AssessmentTable({ slos, data: initialData = [] }: AssessmentTabl
                       )}
                     </div>
                     <div className="grid grid-cols-4 gap-2">
-                      {grades.map(g => (
+                      {grades.map((g) => (
                         <button
                           key={g}
                           onClick={() => {
                             const rowIdx = studentRowIndex(activeStudent.id)
                             if (rowIdx === -1) return
                             const newVal = currentVal === g ? null : g
-                            updateSingleGrade(key, rowIdx, slo.id, newVal)
-                            setActiveStudent(prev => prev ? { ...prev, [slo.id]: newVal } : prev)
-                            triggerAutosave()
+                            updateSingleGrade(rowIdx, slo.id, newVal)
+                            setActiveStudent((prev) => (prev ? { ...prev, [slo.id]: newVal } : prev))
+                            setData((prev) => {
+                              const updated = [...prev]
+                              updated[rowIdx] = { ...updated[rowIdx], [slo.id]: newVal }
+                              triggerAutosave(updated)
+                              return updated
+                            })
                           }}
                           className={cn(
                             'h-14 rounded-xl flex flex-col items-center justify-center gap-0.5 border-2 transition-all active:scale-95 shadow-sm',
