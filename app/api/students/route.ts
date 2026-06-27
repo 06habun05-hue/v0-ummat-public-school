@@ -129,7 +129,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, branch, class: className, status } = body
+    const { name, branch, class: className, status, guardianName, guardianPhone, registrationNumber, address } = body
 
     if (!name || !branch || !className) {
       return NextResponse.json({ error: 'Name, branch, and class are required' }, { status: 400 })
@@ -142,6 +142,10 @@ export async function POST(request: Request) {
         branch,
         class: className,
         status: status || 'Active',
+        guardianName: guardianName || null,
+        guardianPhone: guardianPhone || null,
+        registrationNumber: registrationNumber || null,
+        address: address || null,
       })
       .returning()
 

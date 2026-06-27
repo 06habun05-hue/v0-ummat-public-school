@@ -18,6 +18,10 @@ export const students = pgTable('students', {
   branch:    text('branch').notNull(),   // 'Main Campus' | 'North Campus' | 'South Campus'
   class:     text('class').notNull(),    // e.g. '10-A'
   status:    text('status').notNull().default('Active'), // 'Active' | 'Inactive'
+  guardianName: text('guardian_name'),
+  guardianPhone: text('guardian_phone'),
+  registrationNumber: text('registration_number'),
+  address: text('address'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
@@ -30,6 +34,8 @@ export const users = pgTable('users', {
   role:      text('role').notNull(), // 'SUPER_ADMIN' | 'BRANCH_ADMIN' | 'TEACHER' | 'ACCOUNTANT'
   branch:    text('branch').notNull(),
   status:    text('status').notNull().default('Active'), // 'Active' | 'Inactive'
+  password:  text('password'),
+  specialization: text('specialization'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 

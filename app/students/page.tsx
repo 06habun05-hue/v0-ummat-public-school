@@ -277,6 +277,10 @@ function StudentModal({
   const [selectedClass, setSelectedClass] = useState(classes[0] || '')
   const [feeStatus, setFeeStatus] = useState(feeStatuses[0] || '')
   const [attendance, setAttendance] = useState('100')
+  const [guardianName, setGuardianName] = useState('')
+  const [guardianPhone, setGuardianPhone] = useState('')
+  const [registrationNumber, setRegistrationNumber] = useState('')
+  const [address, setAddress] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -289,6 +293,10 @@ function StudentModal({
       class: selectedClass,
       feeStatus,
       attendance: Number(attendance),
+      guardianName: guardianName.trim() || null,
+      guardianPhone: guardianPhone.trim() || null,
+      registrationNumber: registrationNumber.trim() || null,
+      address: address.trim() || null,
     })
     setSubmitting(false)
   }
@@ -296,8 +304,8 @@ function StudentModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <form onSubmit={handleSubmit} className="relative z-10 bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-background sticky top-0">
+      <form onSubmit={handleSubmit} className="relative z-10 bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-background sticky top-0 z-10">
           <div>
             <h2 className="font-heading font-black text-lg text-foreground">Add New Student</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Enter student details to register</p>
@@ -317,6 +325,30 @@ function StudentModal({
               placeholder="e.g. Mohammad Ali"
               className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Registration Number</label>
+              <input
+                value={registrationNumber}
+                onChange={(e) => setRegistrationNumber(e.target.value)}
+                placeholder="e.g. REG-12345"
+                className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Attendance (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={attendance}
+                onChange={(e) => setAttendance(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -355,36 +387,54 @@ function StudentModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Fee Status</label>
-              <Select value={feeStatus} onValueChange={setFeeStatus}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Fee Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {feeStatuses.map((f) => (
-                    <SelectItem key={f} value={f}>
-                      {f}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Guardian's Name</label>
+              <input
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+                placeholder="e.g. Akbar Ali"
+                className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Attendance (%)</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Guardian's Phone</label>
               <input
-                type="number"
-                min="0"
-                max="100"
-                value={attendance}
-                onChange={(e) => setAttendance(e.target.value)}
+                value={guardianPhone}
+                onChange={(e) => setGuardianPhone(e.target.value)}
+                placeholder="e.g. +92 300 1234567"
                 className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
               />
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">Fee Status</label>
+            <Select value={feeStatus} onValueChange={setFeeStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Fee Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {feeStatuses.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {f}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">Home Address</label>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. House 123, Street 4, Sector G-9, Islamabad"
+              className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all min-h-[80px]"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-background">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-background sticky bottom-0 z-10">
           <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
             Cancel
           </button>

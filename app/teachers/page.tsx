@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Plus, Mail, BookOpen, ToggleLeft, ToggleRight, X, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Plus, Mail, BookOpen, ToggleLeft, ToggleRight, X, User, Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Select,
@@ -20,17 +20,6 @@ interface Teacher {
   classes: string[]
 }
 
-const INITIAL_TEACHERS: Teacher[] = [
-  { id: '1', name: 'Mr. Aamir Khan', email: 'aamir.khan@ummat.edu.pk', specialization: 'Mathematics', status: 'Active', classes: ['10-A', '9-B'] },
-  { id: '2', name: 'Ms. Fatima Zahra', email: 'fatima.zahra@ummat.edu.pk', specialization: 'Islamic Studies', status: 'Active', classes: ['8-A', '7-B'] },
-  { id: '3', name: 'Mr. Hassan Ali', email: 'hassan.ali@ummat.edu.pk', specialization: 'Physics', status: 'Active', classes: ['10-B'] },
-  { id: '4', name: 'Ms. Ayesha Siddiqui', email: 'ayesha.siddiqui@ummat.edu.pk', specialization: 'English', status: 'Active', classes: ['9-A', '8-A'] },
-  { id: '5', name: 'Mr. Bilal Ahmed', email: 'bilal.ahmed@ummat.edu.pk', specialization: 'Computer Science', status: 'Active', classes: ['10-A', '10-B'] },
-  { id: '6', name: 'Ms. Zara Malik', email: 'zara.malik@ummat.edu.pk', specialization: 'Chemistry', status: 'Active', classes: ['9-B'] },
-  { id: '7', name: 'Mr. Usman Ghani', email: 'usman.ghani@ummat.edu.pk', specialization: 'Urdu', status: 'Inactive', classes: [] },
-  { id: '8', name: 'Ms. Sana Javed', email: 'sana.javed@ummat.edu.pk', specialization: 'Biology', status: 'Active', classes: ['9-A'] },
-]
-
 const SPECIALIZATIONS = [
   'Mathematics', 'English', 'Urdu', 'Science', 'Social Studies',
   'Islamic Studies', 'Computer Science', 'Physics', 'Chemistry',
@@ -38,33 +27,72 @@ const SPECIALIZATIONS = [
 ]
 
 export default function TeachersPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>(INITIAL_TEACHERS)
+  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [showAddModal, setShowAddModal] = useState(false)
 
-  const handleToggleStatus = (id: string) => {
-    setTeachers(prev =>
-      prev.map(t => (t.id === id ? { ...t, status: t.status === 'Active' ? 'Inactive' : 'Active' } : t))
-    )
-  }
-
-  const handleAddTeacher = (data: Omit<Teacher, 'id' | 'classes'>) => {
-    const newTeacher: Teacher = {
-      id: String(Date.now()),
-      classes: [],
-      ...data,
+  const fetchTeachers = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        search,
+        specialization: subjectFilter,
+        status: statusFilter,
+      })
+      const res = await fetch(`/api/teachers?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setTeachers(data)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
-    setTeachers(prev => [newTeacher, ...prev])
   }
 
-  const filtered = teachers.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase())
-    const matchesSubject = subjectFilter === 'All' || t.specialization === subjectFilter
-    const matchesStatus = statusFilter === 'All' || t.status === statusFilter
-    return matchesSearch && matchesSubject && matchesStatus
-  })
+  useEffect(() => {
+    fetchTeachers()
+  }, [search, subjectFilter, statusFilter])
+
+  const handleToggleStatus = async (id: string, currentStatus: 'Active' | 'Inactive') => {
+    const nextStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
+    try {
+      const res = await fetch('/api/teachers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: nextStatus }),
+      })
+      if (res.ok) {
+        setTeachers(prev =>
+          prev.map(t => (t.id === id ? { ...t, status: nextStatus } : t))
+        )
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleAddTeacher = async (data: Omit<Teacher, 'id' | 'classes'> & { password?: string }) => {
+    try {
+      const res = await fetch('/api/teachers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (res.ok) {
+        fetchTeachers()
+        setShowAddModal(false)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const filtered = teachers
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -121,7 +149,11 @@ export default function TeachersPage() {
       </div>
 
       {/* Grid List */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
+          Loading teachers...
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
             <User size={28} className="text-muted-foreground/50" />
@@ -139,7 +171,7 @@ export default function TeachersPage() {
                     {t.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <button
-                    onClick={() => handleToggleStatus(t.id)}
+                    onClick={() => handleToggleStatus(t.id, t.status)}
                     className={cn(
                       'p-1 rounded-lg transition-colors',
                       t.status === 'Active' ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:bg-muted'
@@ -206,10 +238,12 @@ function AddTeacherModal({
   onSave,
 }: {
   onClose: () => void
-  onSave: (data: Omit<Teacher, 'id' | 'classes'>) => void
+  onSave: (data: Omit<Teacher, 'id' | 'classes'> & { password?: string }) => void
 }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [specialization, setSpecialization] = useState(SPECIALIZATIONS[0] || '')
   const [status, setStatus] = useState<'Active' | 'Inactive'>('Active')
 
@@ -219,10 +253,10 @@ function AddTeacherModal({
     onSave({
       name: name.trim(),
       email: email.trim(),
+      password: password.trim() || undefined,
       specialization,
       status,
     })
-    onClose()
   }
 
   return (
@@ -261,6 +295,27 @@ function AddTeacherModal({
               placeholder="e.g. tariq.jamil@ummat.edu.pk"
               className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password (optional)"
+                className="w-full pl-3.5 pr-10 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
